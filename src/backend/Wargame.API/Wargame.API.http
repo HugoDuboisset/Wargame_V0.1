@@ -1,0 +1,6 @@
+@Wargame.API_HostAddress = http://localhost:5049
+
+GET {{Wargame.API_HostAddress}}/weatherforecast/
+Accept: application/json
+
+###
