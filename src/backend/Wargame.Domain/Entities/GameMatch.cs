@@ -32,7 +32,7 @@ public class GameMatch : Entity
 
 
 
-    public GameMatch(Guid id, IEnumerable<Player> players, Board board) : base(id)
+    public GameMatch(Guid id, IReadOnlyList<Player> players, Board board) : base(id)
     {
         Board = board;
         _players.AddRange(players);

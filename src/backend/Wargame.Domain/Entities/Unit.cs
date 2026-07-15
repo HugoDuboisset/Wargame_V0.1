@@ -51,7 +51,7 @@ public class Unit : Entity
     public IReadOnlyList<Guid> EngagedWithUnitIds => _engagedWithUnitIds.AsReadOnly();
 
     public Unit(Guid id, string name, UnitType type, UnitProfile baseProfile,
-                IEnumerable<Figure> figures) : base(id)
+                IReadOnlyList<Figure> figures) : base(id)
     {
         Name = name;
         Type = type;

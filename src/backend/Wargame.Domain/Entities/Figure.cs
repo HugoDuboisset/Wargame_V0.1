@@ -31,8 +31,8 @@ public class Figure : Entity
         int maxHitPoints,
         int baseSizeMm,
         Position position,
-        IEnumerable<Weapon>? rangedWeapons = null,
-        IEnumerable<Weapon>? meleeWeapons = null) : base(id)
+        IReadOnlyList<Weapon>? rangedWeapons = null,
+        IReadOnlyList<Weapon>? meleeWeapons = null) : base(id)
     {
         if (maxHitPoints <= 0)
             throw new ArgumentOutOfRangeException(nameof(maxHitPoints), "Max hit points must be positive.");

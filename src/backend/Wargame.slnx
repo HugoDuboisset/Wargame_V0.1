@@ -3,5 +3,6 @@
   <Project Path="Wargame.Application/Wargame.Application.csproj" />
   <Project Path="Wargame.Domain.Tests/Wargame.Domain.Tests.csproj" />
   <Project Path="Wargame.Domain/Wargame.Domain.csproj" />
+  <Project Path="Wargame.Infrastructure.Tests/Wargame.Infrastructure.Tests.csproj" />
   <Project Path="Wargame.Infrastructure/Wargame.Infrastructure.csproj" />
 </Solution>
