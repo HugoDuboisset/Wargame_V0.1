@@ -22,6 +22,15 @@ public class Terrain : Entity
     /// </summary>
     public TerrainGeometry Geometry { get; private set; }
 
+    /// <summary>Largeur du terrain (axe X local) en millimètres.</summary>
+    public int WidthMm { get; private set; }
+
+    /// <summary>Longueur/Profondeur du terrain (axe Y local) en millimètres.</summary>
+    public int LengthMm { get; private set; }
+
+    /// <summary>Angle de rotation en degrés (0-359), dans le sens horaire par rapport au nord.</summary>
+    public int RotationDegrees { get; private set; }
+
     /// <summary>Niveau de protection offert par ce terrain.</summary>
     public CoverLevel CoverLevel { get; private set; }
 
@@ -43,10 +52,14 @@ public class Terrain : Entity
     public bool IsOpaque => Geometry.HasFlag(TerrainGeometry.Opaque);
 
     public Terrain(Guid id, string name, Position position,
+                   int widthMm, int lengthMm, int rotationDegrees,
                    TerrainGeometry geometry, CoverLevel coverLevel) : base(id)
     {
         Name = name;
         Position = position;
+        WidthMm = widthMm;
+        LengthMm = lengthMm;
+        RotationDegrees = rotationDegrees;
         Geometry = geometry;
         CoverLevel = coverLevel;
     }

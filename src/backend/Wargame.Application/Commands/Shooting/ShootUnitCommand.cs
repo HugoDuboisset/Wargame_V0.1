@@ -4,6 +4,7 @@ using Wargame.Application.Commands.Shooting.DTOs;
 using Wargame.Application.Interfaces.Repositories;
 using Wargame.Domain.Entities;
 using Wargame.Domain.Enums;
+using Wargame.Domain.Services;
 
 namespace Wargame.Application.Commands.Shooting;
 
@@ -59,6 +60,8 @@ public class ShootUnitCommandHandler : IRequestHandler<ShootUnitCommand, Shootin
         if (shootingUnit.HasFired)
             throw new InvalidOperationException("L'unité a déjà tiré ce tour.");
 
+        var opaqueTerrains = match.Board.Terrains.Where(t => t.IsOpaque).ToList();
+
         // Validation de chaque tir de figurine
         foreach (var shot in request.FigureShots)
         {
@@ -92,7 +95,8 @@ public class ShootUnitCommandHandler : IRequestHandler<ShootUnitCommand, Shootin
             // Vérification de la portée (distance bord à bord minimum entre les deux unités)
             ValidateRange(figure, shootingUnit, targetUnit, weapon);
 
-            // NOTE : Vérification de la LoS temporairement ignorée (voir commit LoS)
+            // Vérification de la Ligne de Vue (LoS)
+            ValidateLineOfSight(figure, targetUnit, weapon, opaqueTerrains);
         }
 
         // Pour l'infanterie : une seule arme par figurine (déjà garanti par le DTO)
@@ -171,5 +175,23 @@ public class ShootUnitCommandHandler : IRequestHandler<ShootUnitCommand, Shootin
         if (minDistance > weapon.Profile.Range)
             throw new InvalidOperationException(
                 $"La cible est hors de portée. Distance bord à bord : {minDistance:F2}\", portée maximale de l'arme '{weapon.Name}' : {weapon.Profile.Range}\".");
+    }
+
+    private static void ValidateLineOfSight(Figure shootingFigure, Wargame.Domain.Entities.Unit targetUnit, Weapon weapon, List<Terrain> opaqueTerrains)
+    {
+        if (weapon.HasTrait(WeaponTrait.IndirectFire))
+            return; // Les armes à tir indirect ignorent la ligne de vue
+
+        var aliveFigures = targetUnit.Figures.Where(f => f.IsAlive).ToList();
+        if (!aliveFigures.Any()) return;
+
+        // Le tir est possible si AU MOINS UNE figurine de l'unité cible est visible par le tireur
+        bool isAnyVisible = aliveFigures.Any(targetFig => LineOfSightService.IsVisible(shootingFigure, targetFig, opaqueTerrains));
+
+        if (!isAnyVisible)
+        {
+            throw new InvalidOperationException(
+                $"Aucune figurine de l'unité cible n'est en ligne de vue de la figurine tireur (arme '{weapon.Name}' ne possède pas IndirectFire).");
+        }
     }
 }
