@@ -2,6 +2,8 @@ using MediatR;
 using Microsoft.AspNetCore.Mvc;
 using Wargame.Application.Commands.Activation;
 using Wargame.Application.Commands.GameMatch;
+using Wargame.Application.Commands.Movement;
+using Wargame.Application.Commands.Movement.DTOs;
 using Wargame.Application.Queries.GameMatch;
 
 namespace Wargame.API.Controllers;
@@ -55,9 +57,33 @@ public class GameMatchController : ControllerBase
         await _sender.Send(new AdvanceTurnCommand(id), cancellationToken);
         return Ok();
     }
+
+    [HttpPost("{id:guid}/move-unit")]
+    public async Task<IActionResult> MoveUnit(Guid id, [FromBody] MoveUnitRequest request, CancellationToken cancellationToken)
+    {
+        await _sender.Send(new MoveUnitCommand(id, request.UnitId, request.MovementType, request.FigureMoves), cancellationToken);
+        return Ok();
+    }
+
+    [HttpPost("{id:guid}/declare-stationary")]
+    public async Task<IActionResult> DeclareStationary(Guid id, [FromBody] DeclareStationaryRequest request, CancellationToken cancellationToken)
+    {
+        await _sender.Send(new DeclareStationaryCommand(id, request.UnitId), cancellationToken);
+        return Ok();
+    }
 }
 
 /// <summary>
 /// DTO pour la requête d'activation d'unité (évite d'envoyer l'Id de la partie dans le body alors qu'il est dans l'URL).
 /// </summary>
 public record ActivateUnitRequest(Guid UnitId);
+
+/// <summary>
+/// DTO pour la requête de mouvement d'unité.
+/// </summary>
+public record MoveUnitRequest(Guid UnitId, Wargame.Domain.Enums.MovementType MovementType, List<FigureMoveDto> FigureMoves);
+
+/// <summary>
+/// DTO pour la déclaration d'immobilité.
+/// </summary>
+public record DeclareStationaryRequest(Guid UnitId);

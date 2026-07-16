@@ -9,7 +9,7 @@ namespace Wargame.Domain.Entities;
 /// sous la même fiche, avec un seul profil de caractéristiques partagé.
 /// Gère son propre cycle de vie, son statut d'activation, et ses altérations d'état.
 /// </summary>
-public class Unit : Entity
+public partial class Unit : Entity
 {
     private readonly List<Figure> _figures = [];
     private readonly List<Guid> _engagedWithUnitIds = [];
@@ -203,4 +203,5 @@ public class Unit : Entity
         RemoveStatusEffect(StatusEffect.Suppressed);
         // OnFire est géré (résolu et retiré) en phase d'Activation, pas ici.
     }
+
 }
