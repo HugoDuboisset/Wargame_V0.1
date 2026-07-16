@@ -199,9 +199,9 @@ public partial class Unit : Entity
 
         // PinnedDown ne dure qu'une activation : dissipé en début de tour suivant.
         RemoveStatusEffect(StatusEffect.PinnedDown);
-        // Suppressed ne dure qu'une activation.
-        RemoveStatusEffect(StatusEffect.Suppressed);
-        // OnFire est géré (résolu et retiré) en phase d'Activation, pas ici.
+        
+        // Note : Suppressed et OnFire survivent au changement de tour.
+        // Ils sont dissipés lors de l'activation de l'unité.
     }
 
 }

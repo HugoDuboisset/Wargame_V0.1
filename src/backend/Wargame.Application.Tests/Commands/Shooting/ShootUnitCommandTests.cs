@@ -80,7 +80,7 @@ public class ShootUnitCommandTests
             new FigureShootDto(shooter.Figures[0].Id, weapon.Id, target.Id)
         ]);
 
-        var handler = new ShootUnitCommandHandler(_repositoryMock.Object);
+        var handler = new ShootUnitCommandHandler(_repositoryMock.Object, new Wargame.Domain.Services.ShootingResolutionService(), new Wargame.Domain.Services.ShootingValidationService());
         Func<Task> act = () => handler.Handle(command, CancellationToken.None);
 
         await act.Should().ThrowAsync<InvalidOperationException>()
@@ -97,7 +97,7 @@ public class ShootUnitCommandTests
             new FigureShootDto(shooter.Figures[0].Id, weapon.Id, target.Id)
         ]);
 
-        var handler = new ShootUnitCommandHandler(_repositoryMock.Object);
+        var handler = new ShootUnitCommandHandler(_repositoryMock.Object, new Wargame.Domain.Services.ShootingResolutionService(), new Wargame.Domain.Services.ShootingValidationService());
         var result = await handler.Handle(command, CancellationToken.None);
 
         result.Should().NotBeNull();
@@ -115,7 +115,7 @@ public class ShootUnitCommandTests
             new FigureShootDto(shooter.Figures[0].Id, weapon.Id, target.Id)
         ]);
 
-        var handler = new ShootUnitCommandHandler(_repositoryMock.Object);
+        var handler = new ShootUnitCommandHandler(_repositoryMock.Object, new Wargame.Domain.Services.ShootingResolutionService(), new Wargame.Domain.Services.ShootingValidationService());
         Func<Task> act = () => handler.Handle(command, CancellationToken.None);
 
         await act.Should().ThrowAsync<InvalidOperationException>()
@@ -134,7 +134,7 @@ public class ShootUnitCommandTests
             new FigureShootDto(shooter.Figures[0].Id, weapon.Id, target.Id)
         ]);
 
-        var handler = new ShootUnitCommandHandler(_repositoryMock.Object);
+        var handler = new ShootUnitCommandHandler(_repositoryMock.Object, new Wargame.Domain.Services.ShootingResolutionService(), new Wargame.Domain.Services.ShootingValidationService());
         var result = await handler.Handle(command, CancellationToken.None);
 
         result.Should().NotBeNull();
@@ -150,7 +150,7 @@ public class ShootUnitCommandTests
             new FigureShootDto(shooter.Figures[0].Id, weapon.Id, target.Id)
         ]);
 
-        var handler = new ShootUnitCommandHandler(_repositoryMock.Object);
+        var handler = new ShootUnitCommandHandler(_repositoryMock.Object, new Wargame.Domain.Services.ShootingResolutionService(), new Wargame.Domain.Services.ShootingValidationService());
         Func<Task> act = () => handler.Handle(command, CancellationToken.None);
 
         await act.Should().ThrowAsync<InvalidOperationException>()
@@ -168,7 +168,7 @@ public class ShootUnitCommandTests
             new FigureShootDto(shooter.Figures[0].Id, weapon.Id, target.Id)
         ]);
 
-        var handler = new ShootUnitCommandHandler(_repositoryMock.Object);
+        var handler = new ShootUnitCommandHandler(_repositoryMock.Object, new Wargame.Domain.Services.ShootingResolutionService(), new Wargame.Domain.Services.ShootingValidationService());
         var result = await handler.Handle(command, CancellationToken.None);
 
         result.Should().NotBeNull();
@@ -184,7 +184,7 @@ public class ShootUnitCommandTests
             new FigureShootDto(shooter.Figures[0].Id, weapon.Id, target.Id)
         ]);
 
-        var handler = new ShootUnitCommandHandler(_repositoryMock.Object);
+        var handler = new ShootUnitCommandHandler(_repositoryMock.Object, new Wargame.Domain.Services.ShootingResolutionService(), new Wargame.Domain.Services.ShootingValidationService());
         Func<Task> act = () => handler.Handle(command, CancellationToken.None);
 
         await act.Should().ThrowAsync<InvalidOperationException>()
@@ -202,7 +202,7 @@ public class ShootUnitCommandTests
             new FigureShootDto(shooter.Figures[0].Id, weapon.Id, target.Id)
         ]);
 
-        var handler = new ShootUnitCommandHandler(_repositoryMock.Object);
+        var handler = new ShootUnitCommandHandler(_repositoryMock.Object, new Wargame.Domain.Services.ShootingResolutionService(), new Wargame.Domain.Services.ShootingValidationService());
         var result = await handler.Handle(command, CancellationToken.None);
 
         result.Should().NotBeNull();
@@ -225,7 +225,7 @@ public class ShootUnitCommandTests
             new FigureShootDto(shooter.Figures[0].Id, weapon.Id, otherTarget.Id)
         ]);
 
-        var handler = new ShootUnitCommandHandler(_repositoryMock.Object);
+        var handler = new ShootUnitCommandHandler(_repositoryMock.Object, new Wargame.Domain.Services.ShootingResolutionService(), new Wargame.Domain.Services.ShootingValidationService());
         Func<Task> act = () => handler.Handle(command, CancellationToken.None);
 
         await act.Should().ThrowAsync<InvalidOperationException>()

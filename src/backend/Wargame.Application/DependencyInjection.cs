@@ -23,6 +23,10 @@ public static class DependencyInjection
         // Enregistrement de tous les validateurs (AbstractValidator) du projet
         services.AddValidatorsFromAssembly(assembly);
 
+        // Services du Domaine
+        services.AddTransient<Wargame.Domain.Services.ShootingValidationService>();
+        services.AddTransient<Wargame.Domain.Services.ShootingResolutionService>();
+
         return services;
     }
 }
