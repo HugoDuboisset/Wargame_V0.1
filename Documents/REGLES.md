@@ -196,6 +196,8 @@ En cas de réussite, l'unité peut faire son mouvement.
 
 En cas d'échec, l'unité (ou les unités) ennemies avec laquelle elle était engagée peut faire une attaque d'opportunité. Le mouvement a lieu, mais l'unité est considérée comme en fuite (il s'agit plus d'une fuite désordonnée que d'un désengagement en bon ordre).
 
+Un désengagement ayant lieu lors de la phase de mouvement ne donne pas de statut en fuite. 
+
 ### Phase de tir
 
 Les unités disposant d'armes à distance peuvent faire feu.
@@ -357,7 +359,11 @@ Les figurines tuées sont ensuite retirées.
 
 ### Définition du perdant et moral
 
-L'unité ayant perdu le plus de PV au cours du combat est considérée comme étant l'unité perdante. Elle doit faire un test de morale. Si elle échoue, l'unité perdante est obligée de faire un mouvement de désengagement (impliquant le test d'action risquée) devant obligatoirement la rapprocher du bord de table le plus proche. Si une figurine sort de la table lors de ce mouvement, l'unité est considérée comme ayant fui la bataille, et est détruite.
+L'unité ayant perdu le plus de PV au cours du combat est considérée comme étant l'unité perdante. Elle doit faire un test de morale. Si elle échoue, l'unité perdante est obligée de faire un mouvement de désengagement (impliquant le test d'action risquée) devant obligatoirement la rapprocher du bord de table le plus proche. 
+
+Ce mouvement de fuite se fait à la fin de phase de combat, après le test de moral. 
+
+Si une figurine sort de la table lors de ce mouvement, l'unité est considérée comme ayant fui la bataille, et est détruite.
 
 Une unité en fuite a le statut Démoralisé et En fuite jusqu'à sa prochaine activation.
 
