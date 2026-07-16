@@ -1,6 +1,7 @@
 using Wargame.Domain.Entities;
 using Wargame.Domain.Enums;
 using Wargame.Domain.ValueObjects;
+using Wargame.Domain.Services.Traits;
 
 namespace Wargame.Domain.Services;
 
@@ -10,10 +11,12 @@ namespace Wargame.Domain.Services;
 public class DamageResolutionService
 {
     private readonly IDiceRoller _diceRoller;
+    private readonly IEnumerable<IWeaponTraitStrategy> _traitStrategies;
 
-    public DamageResolutionService(IDiceRoller diceRoller)
+    public DamageResolutionService(IDiceRoller diceRoller, IEnumerable<IWeaponTraitStrategy> traitStrategies)
     {
         _diceRoller = diceRoller;
+        _traitStrategies = traitStrategies ?? Enumerable.Empty<IWeaponTraitStrategy>();
     }
 
     /// <summary>
@@ -45,13 +48,12 @@ public class DamageResolutionService
             var hit = hits[i];
 
             // Application des effets de statut liés aux touches (Indépendamment du jet de blessure)
-            if (hit.Traits.HasFlag(WeaponTrait.Suppression))
+            foreach (var strategy in _traitStrategies)
             {
-                targetUnit.ApplyStatusEffect(StatusEffect.Suppressed);
-            }
-            if (hit.Traits.HasFlag(WeaponTrait.Incendiary))
-            {
-                targetUnit.ApplyStatusEffect(StatusEffect.OnFire);
+                if (hit.Traits.HasFlag(strategy.TargetTrait))
+                {
+                    strategy.ApplyEffect(targetUnit, hit);
+                }
             }
 
             // Jet de blessure

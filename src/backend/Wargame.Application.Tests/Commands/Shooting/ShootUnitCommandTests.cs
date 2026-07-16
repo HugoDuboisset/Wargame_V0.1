@@ -86,8 +86,8 @@ public class ShootUnitCommandTests
         var handler = new ShootUnitCommandHandler(
             _repositoryMock.Object, 
             new Wargame.Domain.Services.ShootingResolutionService(diceRoller), 
-            new Wargame.Domain.Services.ShootingValidationService(), 
-            new Wargame.Domain.Services.DamageResolutionService(diceRoller), 
+            new Wargame.Domain.Services.ShootingValidationService(new List<Wargame.Domain.Specifications.Shooting.IShootingValidationSpec> { new Wargame.Domain.Specifications.Shooting.EngagementConstraintsSpec(), new Wargame.Domain.Specifications.Shooting.MovementConstraintsSpec(), new Wargame.Domain.Specifications.Shooting.RangeSpec(), new Wargame.Domain.Specifications.Shooting.LineOfSightSpec() }), 
+            new Wargame.Domain.Services.DamageResolutionService(diceRoller, new List<Wargame.Domain.Services.Traits.IWeaponTraitStrategy> { new Wargame.Domain.Services.Traits.SuppressionTraitStrategy(), new Wargame.Domain.Services.Traits.IncendiaryTraitStrategy() }), 
             new Wargame.Domain.Services.MoraleResolutionService(diceRoller));
         Func<Task> act = () => handler.Handle(command, CancellationToken.None);
 
@@ -111,8 +111,8 @@ public class ShootUnitCommandTests
         var handler = new ShootUnitCommandHandler(
             _repositoryMock.Object, 
             new Wargame.Domain.Services.ShootingResolutionService(diceRoller), 
-            new Wargame.Domain.Services.ShootingValidationService(), 
-            new Wargame.Domain.Services.DamageResolutionService(diceRoller), 
+            new Wargame.Domain.Services.ShootingValidationService(new List<Wargame.Domain.Specifications.Shooting.IShootingValidationSpec> { new Wargame.Domain.Specifications.Shooting.EngagementConstraintsSpec(), new Wargame.Domain.Specifications.Shooting.MovementConstraintsSpec(), new Wargame.Domain.Specifications.Shooting.RangeSpec(), new Wargame.Domain.Specifications.Shooting.LineOfSightSpec() }), 
+            new Wargame.Domain.Services.DamageResolutionService(diceRoller, new List<Wargame.Domain.Services.Traits.IWeaponTraitStrategy> { new Wargame.Domain.Services.Traits.SuppressionTraitStrategy(), new Wargame.Domain.Services.Traits.IncendiaryTraitStrategy() }), 
             new Wargame.Domain.Services.MoraleResolutionService(diceRoller));
         var result = await handler.Handle(command, CancellationToken.None);
 
@@ -137,8 +137,8 @@ public class ShootUnitCommandTests
         var handler = new ShootUnitCommandHandler(
             _repositoryMock.Object, 
             new Wargame.Domain.Services.ShootingResolutionService(diceRoller), 
-            new Wargame.Domain.Services.ShootingValidationService(), 
-            new Wargame.Domain.Services.DamageResolutionService(diceRoller), 
+            new Wargame.Domain.Services.ShootingValidationService(new List<Wargame.Domain.Specifications.Shooting.IShootingValidationSpec> { new Wargame.Domain.Specifications.Shooting.EngagementConstraintsSpec(), new Wargame.Domain.Specifications.Shooting.MovementConstraintsSpec(), new Wargame.Domain.Specifications.Shooting.RangeSpec(), new Wargame.Domain.Specifications.Shooting.LineOfSightSpec() }), 
+            new Wargame.Domain.Services.DamageResolutionService(diceRoller, new List<Wargame.Domain.Services.Traits.IWeaponTraitStrategy> { new Wargame.Domain.Services.Traits.SuppressionTraitStrategy(), new Wargame.Domain.Services.Traits.IncendiaryTraitStrategy() }), 
             new Wargame.Domain.Services.MoraleResolutionService(diceRoller));
         Func<Task> act = () => handler.Handle(command, CancellationToken.None);
 
@@ -164,8 +164,8 @@ public class ShootUnitCommandTests
         var handler = new ShootUnitCommandHandler(
             _repositoryMock.Object, 
             new Wargame.Domain.Services.ShootingResolutionService(diceRoller), 
-            new Wargame.Domain.Services.ShootingValidationService(), 
-            new Wargame.Domain.Services.DamageResolutionService(diceRoller), 
+            new Wargame.Domain.Services.ShootingValidationService(new List<Wargame.Domain.Specifications.Shooting.IShootingValidationSpec> { new Wargame.Domain.Specifications.Shooting.EngagementConstraintsSpec(), new Wargame.Domain.Specifications.Shooting.MovementConstraintsSpec(), new Wargame.Domain.Specifications.Shooting.RangeSpec(), new Wargame.Domain.Specifications.Shooting.LineOfSightSpec() }), 
+            new Wargame.Domain.Services.DamageResolutionService(diceRoller, new List<Wargame.Domain.Services.Traits.IWeaponTraitStrategy> { new Wargame.Domain.Services.Traits.SuppressionTraitStrategy(), new Wargame.Domain.Services.Traits.IncendiaryTraitStrategy() }), 
             new Wargame.Domain.Services.MoraleResolutionService(diceRoller));
         var result = await handler.Handle(command, CancellationToken.None);
 
@@ -188,8 +188,8 @@ public class ShootUnitCommandTests
         var handler = new ShootUnitCommandHandler(
             _repositoryMock.Object, 
             new Wargame.Domain.Services.ShootingResolutionService(diceRoller), 
-            new Wargame.Domain.Services.ShootingValidationService(), 
-            new Wargame.Domain.Services.DamageResolutionService(diceRoller), 
+            new Wargame.Domain.Services.ShootingValidationService(new List<Wargame.Domain.Specifications.Shooting.IShootingValidationSpec> { new Wargame.Domain.Specifications.Shooting.EngagementConstraintsSpec(), new Wargame.Domain.Specifications.Shooting.MovementConstraintsSpec(), new Wargame.Domain.Specifications.Shooting.RangeSpec(), new Wargame.Domain.Specifications.Shooting.LineOfSightSpec() }), 
+            new Wargame.Domain.Services.DamageResolutionService(diceRoller, new List<Wargame.Domain.Services.Traits.IWeaponTraitStrategy> { new Wargame.Domain.Services.Traits.SuppressionTraitStrategy(), new Wargame.Domain.Services.Traits.IncendiaryTraitStrategy() }), 
             new Wargame.Domain.Services.MoraleResolutionService(diceRoller));
         Func<Task> act = () => handler.Handle(command, CancellationToken.None);
 
@@ -214,8 +214,8 @@ public class ShootUnitCommandTests
         var handler = new ShootUnitCommandHandler(
             _repositoryMock.Object, 
             new Wargame.Domain.Services.ShootingResolutionService(diceRoller), 
-            new Wargame.Domain.Services.ShootingValidationService(), 
-            new Wargame.Domain.Services.DamageResolutionService(diceRoller), 
+            new Wargame.Domain.Services.ShootingValidationService(new List<Wargame.Domain.Specifications.Shooting.IShootingValidationSpec> { new Wargame.Domain.Specifications.Shooting.EngagementConstraintsSpec(), new Wargame.Domain.Specifications.Shooting.MovementConstraintsSpec(), new Wargame.Domain.Specifications.Shooting.RangeSpec(), new Wargame.Domain.Specifications.Shooting.LineOfSightSpec() }), 
+            new Wargame.Domain.Services.DamageResolutionService(diceRoller, new List<Wargame.Domain.Services.Traits.IWeaponTraitStrategy> { new Wargame.Domain.Services.Traits.SuppressionTraitStrategy(), new Wargame.Domain.Services.Traits.IncendiaryTraitStrategy() }), 
             new Wargame.Domain.Services.MoraleResolutionService(diceRoller));
         var result = await handler.Handle(command, CancellationToken.None);
 
@@ -238,8 +238,8 @@ public class ShootUnitCommandTests
         var handler = new ShootUnitCommandHandler(
             _repositoryMock.Object, 
             new Wargame.Domain.Services.ShootingResolutionService(diceRoller), 
-            new Wargame.Domain.Services.ShootingValidationService(), 
-            new Wargame.Domain.Services.DamageResolutionService(diceRoller), 
+            new Wargame.Domain.Services.ShootingValidationService(new List<Wargame.Domain.Specifications.Shooting.IShootingValidationSpec> { new Wargame.Domain.Specifications.Shooting.EngagementConstraintsSpec(), new Wargame.Domain.Specifications.Shooting.MovementConstraintsSpec(), new Wargame.Domain.Specifications.Shooting.RangeSpec(), new Wargame.Domain.Specifications.Shooting.LineOfSightSpec() }), 
+            new Wargame.Domain.Services.DamageResolutionService(diceRoller, new List<Wargame.Domain.Services.Traits.IWeaponTraitStrategy> { new Wargame.Domain.Services.Traits.SuppressionTraitStrategy(), new Wargame.Domain.Services.Traits.IncendiaryTraitStrategy() }), 
             new Wargame.Domain.Services.MoraleResolutionService(diceRoller));
         Func<Task> act = () => handler.Handle(command, CancellationToken.None);
 
@@ -264,8 +264,8 @@ public class ShootUnitCommandTests
         var handler = new ShootUnitCommandHandler(
             _repositoryMock.Object, 
             new Wargame.Domain.Services.ShootingResolutionService(diceRoller), 
-            new Wargame.Domain.Services.ShootingValidationService(), 
-            new Wargame.Domain.Services.DamageResolutionService(diceRoller), 
+            new Wargame.Domain.Services.ShootingValidationService(new List<Wargame.Domain.Specifications.Shooting.IShootingValidationSpec> { new Wargame.Domain.Specifications.Shooting.EngagementConstraintsSpec(), new Wargame.Domain.Specifications.Shooting.MovementConstraintsSpec(), new Wargame.Domain.Specifications.Shooting.RangeSpec(), new Wargame.Domain.Specifications.Shooting.LineOfSightSpec() }), 
+            new Wargame.Domain.Services.DamageResolutionService(diceRoller, new List<Wargame.Domain.Services.Traits.IWeaponTraitStrategy> { new Wargame.Domain.Services.Traits.SuppressionTraitStrategy(), new Wargame.Domain.Services.Traits.IncendiaryTraitStrategy() }), 
             new Wargame.Domain.Services.MoraleResolutionService(diceRoller));
         var result = await handler.Handle(command, CancellationToken.None);
 
@@ -295,8 +295,8 @@ public class ShootUnitCommandTests
         var handler = new ShootUnitCommandHandler(
             _repositoryMock.Object, 
             new Wargame.Domain.Services.ShootingResolutionService(diceRoller), 
-            new Wargame.Domain.Services.ShootingValidationService(), 
-            new Wargame.Domain.Services.DamageResolutionService(diceRoller), 
+            new Wargame.Domain.Services.ShootingValidationService(new List<Wargame.Domain.Specifications.Shooting.IShootingValidationSpec> { new Wargame.Domain.Specifications.Shooting.EngagementConstraintsSpec(), new Wargame.Domain.Specifications.Shooting.MovementConstraintsSpec(), new Wargame.Domain.Specifications.Shooting.RangeSpec(), new Wargame.Domain.Specifications.Shooting.LineOfSightSpec() }), 
+            new Wargame.Domain.Services.DamageResolutionService(diceRoller, new List<Wargame.Domain.Services.Traits.IWeaponTraitStrategy> { new Wargame.Domain.Services.Traits.SuppressionTraitStrategy(), new Wargame.Domain.Services.Traits.IncendiaryTraitStrategy() }), 
             new Wargame.Domain.Services.MoraleResolutionService(diceRoller));
         Func<Task> act = () => handler.Handle(command, CancellationToken.None);
 

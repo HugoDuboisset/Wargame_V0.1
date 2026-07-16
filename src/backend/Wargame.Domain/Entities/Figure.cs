@@ -61,6 +61,18 @@ public class Figure : Entity
         Position = newPosition;
     }
 
+    public void AddRangedWeapon(Weapon weapon)
+    {
+        if (weapon == null) throw new ArgumentNullException(nameof(weapon));
+        _rangedWeapons.Add(weapon);
+    }
+
+    public void AddMeleeWeapon(Weapon weapon)
+    {
+        if (weapon == null) throw new ArgumentNullException(nameof(weapon));
+        _meleeWeapons.Add(weapon);
+    }
+
     /// <summary>
     /// Calcule la distance bord à bord entre cette figurine et une autre.
     /// Les socles sont circulaires ; les rayons sont convertis de mm en pouces (÷ 25.4).

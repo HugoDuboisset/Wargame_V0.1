@@ -3,6 +3,7 @@ using Wargame.Domain.Entities;
 using Wargame.Domain.Enums;
 using Wargame.Domain.Services;
 using Wargame.Domain.ValueObjects;
+using Wargame.Domain.Services.Traits;
 using Xunit;
 
 namespace Wargame.Domain.Tests.Services;
@@ -39,7 +40,8 @@ public class DamageResolutionServiceTests
     {
         var (shootingUnit, targetUnit) = SetupScenario(targetArmor: ArmorClass.Light); // TN vs SmallCaliber = 7+
         var roller = new MockDiceRoller(7, 8, 6);
-        var service = new DamageResolutionService(roller);
+        var strategies = new List<IWeaponTraitStrategy> { new SuppressionTraitStrategy(), new IncendiaryTraitStrategy() };
+        var service = new DamageResolutionService(roller, strategies);
 
         // 3 touches : 2 réussites (7, 8) et 1 échec (6)
         var hits = new List<Hit> { 
@@ -60,7 +62,8 @@ public class DamageResolutionServiceTests
     {
         var (shootingUnit, targetUnit) = SetupScenario();
         var roller = new MockDiceRoller(10);
-        var service = new DamageResolutionService(roller);
+        var strategies = new List<IWeaponTraitStrategy> { new SuppressionTraitStrategy(), new IncendiaryTraitStrategy() };
+        var service = new DamageResolutionService(roller, strategies);
         
         var hits = new List<Hit> { new Hit(RangedWeaponCaliber.SmallCaliber, 1, WeaponTrait.None) };
         service.ResolveWoundsAndApplyDamage(hits, shootingUnit, targetUnit, []); // Jet 10 = blessure auto
@@ -75,7 +78,8 @@ public class DamageResolutionServiceTests
     {
         var (shootingUnit, targetUnit) = SetupScenario();
         var roller = new MockDiceRoller(1, 1);
-        var service = new DamageResolutionService(roller);
+        var strategies = new List<IWeaponTraitStrategy> { new SuppressionTraitStrategy(), new IncendiaryTraitStrategy() };
+        var service = new DamageResolutionService(roller, strategies);
 
         var hits = new List<Hit> { 
             new Hit(RangedWeaponCaliber.SmallCaliber, 1, WeaponTrait.Suppression),
@@ -96,7 +100,8 @@ public class DamageResolutionServiceTests
         // Cibles avec 1 PV
         var (shootingUnit, targetUnit) = SetupScenario(targetHitPoints: 1, targetFigureCount: 5);
         var roller = new MockDiceRoller(10);
-        var service = new DamageResolutionService(roller);
+        var strategies = new List<IWeaponTraitStrategy> { new SuppressionTraitStrategy(), new IncendiaryTraitStrategy() };
+        var service = new DamageResolutionService(roller, strategies);
 
         // 1 Touche avec 5 dégâts !
         var hits = new List<Hit> { new Hit(RangedWeaponCaliber.AntiTank, 5, WeaponTrait.None) };
