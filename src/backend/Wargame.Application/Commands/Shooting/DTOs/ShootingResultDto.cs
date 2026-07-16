@@ -4,11 +4,19 @@ namespace Wargame.Application.Commands.Shooting.DTOs;
 /// Résultat retourné au client après résolution d'une phase de tir.
 /// Sera enrichi au fil des commits (touches, blessures, moral...).
 /// </summary>
-public record ShootingResultDto(
-    int TotalHits,
-    int TotalWounds,
+public record TargetShootingResultDto(
+    Guid TargetUnitId,
+    int Hits,
+    int Wounds,
     int FiguresDestroyed,
     bool MoraleTestTriggered,
     bool MoraleTestPassed,
     bool TargetPinnedDown
+);
+
+public record ShootingResultDto(
+    int TotalHits,
+    int TotalWounds,
+    int FiguresDestroyed,
+    List<TargetShootingResultDto> TargetResults
 );

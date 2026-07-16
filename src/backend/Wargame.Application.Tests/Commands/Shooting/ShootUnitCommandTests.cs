@@ -80,7 +80,15 @@ public class ShootUnitCommandTests
             new FigureShootDto(shooter.Figures[0].Id, weapon.Id, target.Id)
         ]);
 
-        var handler = new ShootUnitCommandHandler(_repositoryMock.Object, new Wargame.Domain.Services.ShootingResolutionService(), new Wargame.Domain.Services.ShootingValidationService(), new Wargame.Domain.Services.DamageResolutionService());
+        var diceRollerMock = new Moq.Mock<Wargame.Domain.Services.IDiceRoller>();
+        diceRollerMock.Setup(d => d.RollD10()).Returns(10); // par défaut on force un jet de 10 pour que ça touche et blesse
+        var diceRoller = diceRollerMock.Object;
+        var handler = new ShootUnitCommandHandler(
+            _repositoryMock.Object, 
+            new Wargame.Domain.Services.ShootingResolutionService(diceRoller), 
+            new Wargame.Domain.Services.ShootingValidationService(), 
+            new Wargame.Domain.Services.DamageResolutionService(diceRoller), 
+            new Wargame.Domain.Services.MoraleResolutionService(diceRoller));
         Func<Task> act = () => handler.Handle(command, CancellationToken.None);
 
         await act.Should().ThrowAsync<InvalidOperationException>()
@@ -97,7 +105,15 @@ public class ShootUnitCommandTests
             new FigureShootDto(shooter.Figures[0].Id, weapon.Id, target.Id)
         ]);
 
-        var handler = new ShootUnitCommandHandler(_repositoryMock.Object, new Wargame.Domain.Services.ShootingResolutionService(), new Wargame.Domain.Services.ShootingValidationService(), new Wargame.Domain.Services.DamageResolutionService());
+        var diceRollerMock = new Moq.Mock<Wargame.Domain.Services.IDiceRoller>();
+        diceRollerMock.Setup(d => d.RollD10()).Returns(10); // par défaut on force un jet de 10 pour que ça touche et blesse
+        var diceRoller = diceRollerMock.Object;
+        var handler = new ShootUnitCommandHandler(
+            _repositoryMock.Object, 
+            new Wargame.Domain.Services.ShootingResolutionService(diceRoller), 
+            new Wargame.Domain.Services.ShootingValidationService(), 
+            new Wargame.Domain.Services.DamageResolutionService(diceRoller), 
+            new Wargame.Domain.Services.MoraleResolutionService(diceRoller));
         var result = await handler.Handle(command, CancellationToken.None);
 
         result.Should().NotBeNull();
@@ -115,7 +131,15 @@ public class ShootUnitCommandTests
             new FigureShootDto(shooter.Figures[0].Id, weapon.Id, target.Id)
         ]);
 
-        var handler = new ShootUnitCommandHandler(_repositoryMock.Object, new Wargame.Domain.Services.ShootingResolutionService(), new Wargame.Domain.Services.ShootingValidationService(), new Wargame.Domain.Services.DamageResolutionService());
+        var diceRollerMock = new Moq.Mock<Wargame.Domain.Services.IDiceRoller>();
+        diceRollerMock.Setup(d => d.RollD10()).Returns(10); // par défaut on force un jet de 10 pour que ça touche et blesse
+        var diceRoller = diceRollerMock.Object;
+        var handler = new ShootUnitCommandHandler(
+            _repositoryMock.Object, 
+            new Wargame.Domain.Services.ShootingResolutionService(diceRoller), 
+            new Wargame.Domain.Services.ShootingValidationService(), 
+            new Wargame.Domain.Services.DamageResolutionService(diceRoller), 
+            new Wargame.Domain.Services.MoraleResolutionService(diceRoller));
         Func<Task> act = () => handler.Handle(command, CancellationToken.None);
 
         await act.Should().ThrowAsync<InvalidOperationException>()
@@ -134,7 +158,15 @@ public class ShootUnitCommandTests
             new FigureShootDto(shooter.Figures[0].Id, weapon.Id, target.Id)
         ]);
 
-        var handler = new ShootUnitCommandHandler(_repositoryMock.Object, new Wargame.Domain.Services.ShootingResolutionService(), new Wargame.Domain.Services.ShootingValidationService(), new Wargame.Domain.Services.DamageResolutionService());
+        var diceRollerMock = new Moq.Mock<Wargame.Domain.Services.IDiceRoller>();
+        diceRollerMock.Setup(d => d.RollD10()).Returns(10); // par défaut on force un jet de 10 pour que ça touche et blesse
+        var diceRoller = diceRollerMock.Object;
+        var handler = new ShootUnitCommandHandler(
+            _repositoryMock.Object, 
+            new Wargame.Domain.Services.ShootingResolutionService(diceRoller), 
+            new Wargame.Domain.Services.ShootingValidationService(), 
+            new Wargame.Domain.Services.DamageResolutionService(diceRoller), 
+            new Wargame.Domain.Services.MoraleResolutionService(diceRoller));
         var result = await handler.Handle(command, CancellationToken.None);
 
         result.Should().NotBeNull();
@@ -150,7 +182,15 @@ public class ShootUnitCommandTests
             new FigureShootDto(shooter.Figures[0].Id, weapon.Id, target.Id)
         ]);
 
-        var handler = new ShootUnitCommandHandler(_repositoryMock.Object, new Wargame.Domain.Services.ShootingResolutionService(), new Wargame.Domain.Services.ShootingValidationService(), new Wargame.Domain.Services.DamageResolutionService());
+        var diceRollerMock = new Moq.Mock<Wargame.Domain.Services.IDiceRoller>();
+        diceRollerMock.Setup(d => d.RollD10()).Returns(10); // par défaut on force un jet de 10 pour que ça touche et blesse
+        var diceRoller = diceRollerMock.Object;
+        var handler = new ShootUnitCommandHandler(
+            _repositoryMock.Object, 
+            new Wargame.Domain.Services.ShootingResolutionService(diceRoller), 
+            new Wargame.Domain.Services.ShootingValidationService(), 
+            new Wargame.Domain.Services.DamageResolutionService(diceRoller), 
+            new Wargame.Domain.Services.MoraleResolutionService(diceRoller));
         Func<Task> act = () => handler.Handle(command, CancellationToken.None);
 
         await act.Should().ThrowAsync<InvalidOperationException>()
@@ -168,7 +208,15 @@ public class ShootUnitCommandTests
             new FigureShootDto(shooter.Figures[0].Id, weapon.Id, target.Id)
         ]);
 
-        var handler = new ShootUnitCommandHandler(_repositoryMock.Object, new Wargame.Domain.Services.ShootingResolutionService(), new Wargame.Domain.Services.ShootingValidationService(), new Wargame.Domain.Services.DamageResolutionService());
+        var diceRollerMock = new Moq.Mock<Wargame.Domain.Services.IDiceRoller>();
+        diceRollerMock.Setup(d => d.RollD10()).Returns(10); // par défaut on force un jet de 10 pour que ça touche et blesse
+        var diceRoller = diceRollerMock.Object;
+        var handler = new ShootUnitCommandHandler(
+            _repositoryMock.Object, 
+            new Wargame.Domain.Services.ShootingResolutionService(diceRoller), 
+            new Wargame.Domain.Services.ShootingValidationService(), 
+            new Wargame.Domain.Services.DamageResolutionService(diceRoller), 
+            new Wargame.Domain.Services.MoraleResolutionService(diceRoller));
         var result = await handler.Handle(command, CancellationToken.None);
 
         result.Should().NotBeNull();
@@ -184,7 +232,15 @@ public class ShootUnitCommandTests
             new FigureShootDto(shooter.Figures[0].Id, weapon.Id, target.Id)
         ]);
 
-        var handler = new ShootUnitCommandHandler(_repositoryMock.Object, new Wargame.Domain.Services.ShootingResolutionService(), new Wargame.Domain.Services.ShootingValidationService(), new Wargame.Domain.Services.DamageResolutionService());
+        var diceRollerMock = new Moq.Mock<Wargame.Domain.Services.IDiceRoller>();
+        diceRollerMock.Setup(d => d.RollD10()).Returns(10); // par défaut on force un jet de 10 pour que ça touche et blesse
+        var diceRoller = diceRollerMock.Object;
+        var handler = new ShootUnitCommandHandler(
+            _repositoryMock.Object, 
+            new Wargame.Domain.Services.ShootingResolutionService(diceRoller), 
+            new Wargame.Domain.Services.ShootingValidationService(), 
+            new Wargame.Domain.Services.DamageResolutionService(diceRoller), 
+            new Wargame.Domain.Services.MoraleResolutionService(diceRoller));
         Func<Task> act = () => handler.Handle(command, CancellationToken.None);
 
         await act.Should().ThrowAsync<InvalidOperationException>()
@@ -202,7 +258,15 @@ public class ShootUnitCommandTests
             new FigureShootDto(shooter.Figures[0].Id, weapon.Id, target.Id)
         ]);
 
-        var handler = new ShootUnitCommandHandler(_repositoryMock.Object, new Wargame.Domain.Services.ShootingResolutionService(), new Wargame.Domain.Services.ShootingValidationService(), new Wargame.Domain.Services.DamageResolutionService());
+        var diceRollerMock = new Moq.Mock<Wargame.Domain.Services.IDiceRoller>();
+        diceRollerMock.Setup(d => d.RollD10()).Returns(10); // par défaut on force un jet de 10 pour que ça touche et blesse
+        var diceRoller = diceRollerMock.Object;
+        var handler = new ShootUnitCommandHandler(
+            _repositoryMock.Object, 
+            new Wargame.Domain.Services.ShootingResolutionService(diceRoller), 
+            new Wargame.Domain.Services.ShootingValidationService(), 
+            new Wargame.Domain.Services.DamageResolutionService(diceRoller), 
+            new Wargame.Domain.Services.MoraleResolutionService(diceRoller));
         var result = await handler.Handle(command, CancellationToken.None);
 
         result.Should().NotBeNull();
@@ -225,7 +289,15 @@ public class ShootUnitCommandTests
             new FigureShootDto(shooter.Figures[0].Id, weapon.Id, otherTarget.Id)
         ]);
 
-        var handler = new ShootUnitCommandHandler(_repositoryMock.Object, new Wargame.Domain.Services.ShootingResolutionService(), new Wargame.Domain.Services.ShootingValidationService(), new Wargame.Domain.Services.DamageResolutionService());
+        var diceRollerMock = new Moq.Mock<Wargame.Domain.Services.IDiceRoller>();
+        diceRollerMock.Setup(d => d.RollD10()).Returns(10); // par défaut on force un jet de 10 pour que ça touche et blesse
+        var diceRoller = diceRollerMock.Object;
+        var handler = new ShootUnitCommandHandler(
+            _repositoryMock.Object, 
+            new Wargame.Domain.Services.ShootingResolutionService(diceRoller), 
+            new Wargame.Domain.Services.ShootingValidationService(), 
+            new Wargame.Domain.Services.DamageResolutionService(diceRoller), 
+            new Wargame.Domain.Services.MoraleResolutionService(diceRoller));
         Func<Task> act = () => handler.Handle(command, CancellationToken.None);
 
         await act.Should().ThrowAsync<InvalidOperationException>()

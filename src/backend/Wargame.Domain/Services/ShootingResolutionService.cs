@@ -10,6 +10,13 @@ namespace Wargame.Domain.Services;
 /// </summary>
 public class ShootingResolutionService
 {
+    private readonly IDiceRoller _diceRoller;
+
+    public ShootingResolutionService(IDiceRoller diceRoller)
+    {
+        _diceRoller = diceRoller;
+    }
+
     /// <summary>
     /// Résout le tir d'une figurine avec une arme spécifique contre une unité cible.
     /// Retourne la liste des touches (Hits) générées.
@@ -19,8 +26,7 @@ public class ShootingResolutionService
         Unit shootingUnit, 
         Unit targetUnit, 
         Weapon weapon, 
-        List<Terrain> boardTerrains,
-        IReadOnlyList<int>? forcedRolls = null)
+        List<Terrain> boardTerrains)
     {
         var hits = new List<Hit>();
 
@@ -53,7 +59,7 @@ public class ShootingResolutionService
 
         // 4. Jets de dés
         int targetNumber = shootingUnit.BaseProfile.Shooting;
-        var rolls = forcedRolls ?? Enumerable.Range(0, attacks).Select(_ => Random.Shared.Next(1, 11)).ToList();
+        var rolls = Enumerable.Range(0, attacks).Select(_ => _diceRoller.RollD10()).ToList();
 
         foreach (var roll in rolls)
         {

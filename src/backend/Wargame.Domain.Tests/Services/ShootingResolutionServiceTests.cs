@@ -11,9 +11,9 @@ public class ShootingResolutionServiceTests
 {
     private const int StandardBaseSizeMm = 25;
 
-    private ShootingResolutionService CreateService()
+    private ShootingResolutionService CreateService(IDiceRoller? diceRoller = null)
     {
-        return new ShootingResolutionService();
+        return new ShootingResolutionService(diceRoller ?? new MockDiceRoller());
     }
 
     private (Figure shooter, Unit shootingUnit, Unit targetUnit, Weapon weapon) SetupScenario(
@@ -45,21 +45,23 @@ public class ShootingResolutionServiceTests
     [Fact]
     public void ResolveShot_Should_Return_Hits_When_Roll_Is_High_Enough()
     {
-        var service = CreateService();
+        var roller = new MockDiceRoller(4);
+        var service = CreateService(roller);
         var (shooter, shootingUnit, targetUnit, weapon) = SetupScenario(shootingSkill: 4);
 
-        var hits = service.ResolveShot(shooter, shootingUnit, targetUnit, weapon, [], [4]); // CT 4, Jet 4 = Touche
+        var hits = service.ResolveShot(shooter, shootingUnit, targetUnit, weapon, []); // CT 4, Jet 4 = Touche
 
         hits.Should().HaveCount(1);
     }
 
     [Fact]
-    public void ResolveShot_Should_Return_Empty_When_Roll_Is_Too_Low()
+    public void ResolveShot_Should_Not_Return_Hits_When_Roll_Is_Too_Low()
     {
-        var service = CreateService();
+        var roller = new MockDiceRoller(3);
+        var service = CreateService(roller);
         var (shooter, shootingUnit, targetUnit, weapon) = SetupScenario(shootingSkill: 4);
 
-        var hits = service.ResolveShot(shooter, shootingUnit, targetUnit, weapon, [], [3]); // CT 4, Jet 3 = Echec
+        var hits = service.ResolveShot(shooter, shootingUnit, targetUnit, weapon, []); // CT 4, Jet 3 = Rate
 
         hits.Should().BeEmpty();
     }
@@ -67,23 +69,25 @@ public class ShootingResolutionServiceTests
     [Fact]
     public void ResolveShot_Should_Apply_Sprint_Handy_Modifier()
     {
-        var service = CreateService();
+        var roller = new MockDiceRoller(5, 6);
+        var service = CreateService(roller);
         // Mouvement Sprint, Arme Handy. Modificateur = -2. 
         // CT 4. Jet de 5 - 2 = 3 (Echec). Jet de 6 - 2 = 4 (Touche).
         var (shooter, shootingUnit, targetUnit, weapon) = SetupScenario(
             shootingSkill: 4, movement: MovementType.Sprint, traits: WeaponTrait.Handy);
 
-        var hits1 = service.ResolveShot(shooter, shootingUnit, targetUnit, weapon, [], [5]);
+        var hits1 = service.ResolveShot(shooter, shootingUnit, targetUnit, weapon, []);
         hits1.Should().BeEmpty();
 
-        var hits2 = service.ResolveShot(shooter, shootingUnit, targetUnit, weapon, [], [6]);
+        var hits2 = service.ResolveShot(shooter, shootingUnit, targetUnit, weapon, []);
         hits2.Should().HaveCount(1);
     }
 
     [Fact]
     public void ResolveShot_Should_Apply_Cover_Penalty()
     {
-        var service = CreateService();
+        var roller = new MockDiceRoller(6, 7);
+        var service = CreateService(roller);
         var (shooter, shootingUnit, targetUnit, weapon) = SetupScenario(shootingSkill: 4);
 
         // Terrain sur la cible (Occupation). Cover Heavy (-3).
@@ -91,49 +95,51 @@ public class ShootingResolutionServiceTests
         var terrain = new Terrain(Guid.NewGuid(), "Ruines", targetUnit.Figures[0].Position,
             100, 100, 0, TerrainGeometry.Occupation, CoverLevel.Heavy);
 
-        var hits1 = service.ResolveShot(shooter, shootingUnit, targetUnit, weapon, [terrain], [6]);
+        var hits1 = service.ResolveShot(shooter, shootingUnit, targetUnit, weapon, [terrain]);
         hits1.Should().BeEmpty();
 
-        var hits2 = service.ResolveShot(shooter, shootingUnit, targetUnit, weapon, [terrain], [7]);
+        var hits2 = service.ResolveShot(shooter, shootingUnit, targetUnit, weapon, [terrain]);
         hits2.Should().HaveCount(1);
     }
 
     [Fact]
     public void ResolveShot_Should_Ignore_Cover_When_Weapon_Has_IgnoreCover_Trait()
     {
-        var service = CreateService();
+        var roller = new MockDiceRoller(4);
+        var service = CreateService(roller);
         var (shooter, shootingUnit, targetUnit, weapon) = SetupScenario(
             shootingSkill: 4, traits: WeaponTrait.IgnoreCover);
 
         var terrain = new Terrain(Guid.NewGuid(), "Ruines", targetUnit.Figures[0].Position,
             100, 100, 0, TerrainGeometry.Occupation, CoverLevel.Heavy);
 
-        var hits = service.ResolveShot(shooter, shootingUnit, targetUnit, weapon, [terrain], [4]); // CT 4, Jet 4 = Touche, même dans Cover Heavy grâce au trait
+        var hits = service.ResolveShot(shooter, shootingUnit, targetUnit, weapon, [terrain]); // CT 4, Jet 4 = Touche, même dans Cover Heavy grâce au trait
 
         hits.Should().HaveCount(1);
     }
 
     [Fact]
-    public void ResolveShot_Should_Add_Explosive_Hits()
+    public void ResolveShot_Should_Generate_Multiple_Hits_With_Explosive_Trait()
     {
-        var service = CreateService();
-        var (shooter, shootingUnit, targetUnit, weapon) = SetupScenario(
-            shootingSkill: 4, traits: WeaponTrait.Explosive, explosiveHits: 2); // 1 touche + 2 extra = 3
+        var roller = new MockDiceRoller(4);
+        var service = CreateService(roller);
+        var (shooter, shootingUnit, targetUnit, weapon) = SetupScenario(shootingSkill: 4, traits: WeaponTrait.Explosive, explosiveHits: 2);
 
-        var hits = service.ResolveShot(shooter, shootingUnit, targetUnit, weapon, [], [4]);
+        var hits = service.ResolveShot(shooter, shootingUnit, targetUnit, weapon, []); // 1 touche + 2 explosif = 3 touches
 
         hits.Should().HaveCount(3);
     }
 
     [Fact]
-    public void ResolveShot_Should_Add_Bursts_Attacks_At_Half_Range()
+    public void ResolveShot_Should_Increase_Attacks_With_Bursts_Trait_At_Half_Range()
     {
-        var service = CreateService();
-        // Portée 24", Cible à 10" (<= 12"), Trait Bursts -> +2 attaques
-        var (shooter, shootingUnit, targetUnit, weapon) = SetupScenario(
-            weaponRange: 24.0, targetDistance: 10.0, weaponAttacks: 1, traits: WeaponTrait.Bursts);
+        var roller = new MockDiceRoller(4, 5, 2); // 3 jets
+        var service = CreateService(roller);
+        // Arme portée 24", cible à 10" (donc à mi-portée ou moins)
+        var (shooter, shootingUnit, targetUnit, weapon) = SetupScenario(weaponRange: 24.0, targetDistance: 10.0, traits: WeaponTrait.Bursts, weaponAttacks: 1);
 
-        var hits = service.ResolveShot(shooter, shootingUnit, targetUnit, weapon, [], [4, 4, 3]); // 3 dés lancés : 2 touches, 1 échec
+        // 1 Attaque de base + 2 pour Bursts à mi-portée = 3 attaques. Jets: 4, 5, 2. (CT 4) -> 2 réussites.
+        var hits = service.ResolveShot(shooter, shootingUnit, targetUnit, weapon, []); 
 
         hits.Should().HaveCount(2);
     }
@@ -141,12 +147,13 @@ public class ShootingResolutionServiceTests
     [Fact]
     public void ResolveShot_Should_Change_Caliber_For_Buckshot_At_Half_Range()
     {
-        var service = CreateService();
+        var roller = new MockDiceRoller(4);
+        var service = CreateService(roller);
         // Portée 24", Cible à 10", Trait Buckshot -> HeavyCaliber
         var (shooter, shootingUnit, targetUnit, weapon) = SetupScenario(
             weaponRange: 24.0, targetDistance: 10.0, traits: WeaponTrait.Buckshot);
 
-        var hits = service.ResolveShot(shooter, shootingUnit, targetUnit, weapon, [], [4]);
+        var hits = service.ResolveShot(shooter, shootingUnit, targetUnit, weapon, []);
 
         hits.Should().HaveCount(1);
         hits[0].Caliber.Should().Be(RangedWeaponCaliber.HeavyCaliber);

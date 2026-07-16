@@ -24,9 +24,11 @@ public static class DependencyInjection
         services.AddValidatorsFromAssembly(assembly);
 
         // Services du Domaine
+        services.AddSingleton<Wargame.Domain.Services.IDiceRoller, Wargame.Domain.Services.StandardDiceRoller>();
         services.AddTransient<Wargame.Domain.Services.ShootingValidationService>();
         services.AddTransient<Wargame.Domain.Services.ShootingResolutionService>();
         services.AddTransient<Wargame.Domain.Services.DamageResolutionService>();
+        services.AddTransient<Wargame.Domain.Services.MoraleResolutionService>();
 
         return services;
     }

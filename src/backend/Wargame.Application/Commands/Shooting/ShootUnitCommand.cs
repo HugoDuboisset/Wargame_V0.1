@@ -39,17 +39,20 @@ public class ShootUnitCommandHandler : IRequestHandler<ShootUnitCommand, Shootin
     private readonly ShootingResolutionService _shootingResolutionService;
     private readonly ShootingValidationService _shootingValidationService;
     private readonly DamageResolutionService _damageResolutionService;
+    private readonly MoraleResolutionService _moraleResolutionService;
 
     public ShootUnitCommandHandler(
         IGameMatchRepository repository, 
         ShootingResolutionService shootingResolutionService,
         ShootingValidationService shootingValidationService,
-        DamageResolutionService damageResolutionService)
+        DamageResolutionService damageResolutionService,
+        MoraleResolutionService moraleResolutionService)
     {
         _repository = repository;
         _shootingResolutionService = shootingResolutionService;
         _shootingValidationService = shootingValidationService;
         _damageResolutionService = damageResolutionService;
+        _moraleResolutionService = moraleResolutionService;
     }
 
     public async Task<ShootingResultDto> Handle(ShootUnitCommand request, CancellationToken cancellationToken)
@@ -114,8 +117,9 @@ public class ShootUnitCommandHandler : IRequestHandler<ShootUnitCommand, Shootin
         int totalHits = 0;
         int totalWounds = 0;
         int figuresDestroyed = 0;
+        var targetResults = new List<TargetShootingResultDto>();
 
-        // Résolution des blessures et application des dégâts pour chaque unité cible
+        // Résolution des blessures, application des dégâts et tests de moral pour chaque unité cible
         foreach (var kvp in hitsByTarget)
         {
             var targetUnit = kvp.Key;
@@ -127,21 +131,38 @@ public class ShootUnitCommandHandler : IRequestHandler<ShootUnitCommand, Shootin
 
             totalWounds += wounds;
             figuresDestroyed += destroyed;
-        }
 
-        // TODO Commit 5 : déclencher le test de Moral si nécessaire
+            bool moraleTriggered = false;
+            bool moralePassed = false;
+
+            // Déclencher un test de moral si l'unité a subi des pertes et est descendue à <= 50% de sa force initiale
+            if (destroyed > 0 && targetUnit.HasLostHalfOrMore())
+            {
+                moraleTriggered = true;
+                moralePassed = _moraleResolutionService.ResolveMoraleTest(targetUnit);
+            }
+
+            targetResults.Add(new TargetShootingResultDto(
+                TargetUnitId: targetUnit.Id,
+                Hits: hits.Count,
+                Wounds: wounds,
+                FiguresDestroyed: destroyed,
+                MoraleTestTriggered: moraleTriggered,
+                MoraleTestPassed: moralePassed,
+                TargetPinnedDown: targetUnit.IsPinnedDown()
+            ));
+        }
 
         shootingUnit.RegisterFired();
         await _repository.SaveAsync(match, cancellationToken);
 
-        // Résultat provisoire
+        // Résultat final
         return new ShootingResultDto(
             TotalHits: totalHits, 
             TotalWounds: totalWounds, 
             FiguresDestroyed: figuresDestroyed, 
-            MoraleTestTriggered: false, 
-            MoraleTestPassed: false, 
-            TargetPinnedDown: false);
+            TargetResults: targetResults
+        );
     }
 
 }
