@@ -1,0 +1,63 @@
+using MediatR;
+using Microsoft.AspNetCore.Mvc;
+using Wargame.Application.Commands.Activation;
+using Wargame.Application.Commands.GameMatch;
+using Wargame.Application.Queries.GameMatch;
+
+namespace Wargame.API.Controllers;
+
+[ApiController]
+[Route("api/matches")]
+public class GameMatchController : ControllerBase
+{
+    private readonly ISender _sender;
+
+    public GameMatchController(ISender sender)
+    {
+        _sender = sender;
+    }
+
+    [HttpPost]
+    public async Task<IActionResult> CreateGameMatch([FromBody] CreateGameMatchCommand command, CancellationToken cancellationToken)
+    {
+        var matchId = await _sender.Send(command, cancellationToken);
+        return CreatedAtAction(nameof(GetGameMatch), new { id = matchId }, new { Id = matchId });
+    }
+
+    [HttpGet("{id:guid}")]
+    public async Task<IActionResult> GetGameMatch(Guid id, CancellationToken cancellationToken)
+    {
+        var match = await _sender.Send(new GetGameMatchQuery(id), cancellationToken);
+        
+        if (match == null)
+            return NotFound();
+            
+        return Ok(match);
+    }
+
+    [HttpPost("{id:guid}/roll-initiative")]
+    public async Task<IActionResult> RollInitiative(Guid id, CancellationToken cancellationToken)
+    {
+        await _sender.Send(new RollInitiativeCommand(id), cancellationToken);
+        return Ok();
+    }
+
+    [HttpPost("{id:guid}/activate-unit")]
+    public async Task<IActionResult> ActivateUnit(Guid id, [FromBody] ActivateUnitRequest request, CancellationToken cancellationToken)
+    {
+        await _sender.Send(new ActivateUnitCommand(id, request.UnitId), cancellationToken);
+        return Ok();
+    }
+
+    [HttpPost("{id:guid}/advance-turn")]
+    public async Task<IActionResult> AdvanceTurn(Guid id, CancellationToken cancellationToken)
+    {
+        await _sender.Send(new AdvanceTurnCommand(id), cancellationToken);
+        return Ok();
+    }
+}
+
+/// <summary>
+/// DTO pour la requête d'activation d'unité (évite d'envoyer l'Id de la partie dans le body alors qu'il est dans l'URL).
+/// </summary>
+public record ActivateUnitRequest(Guid UnitId);
