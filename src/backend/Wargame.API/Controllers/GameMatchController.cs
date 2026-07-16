@@ -4,6 +4,8 @@ using Wargame.Application.Commands.Activation;
 using Wargame.Application.Commands.GameMatch;
 using Wargame.Application.Commands.Movement;
 using Wargame.Application.Commands.Movement.DTOs;
+using Wargame.Application.Commands.Shooting;
+using Wargame.Application.Commands.Shooting.DTOs;
 using Wargame.Application.Queries.GameMatch;
 
 namespace Wargame.API.Controllers;
@@ -71,6 +73,13 @@ public class GameMatchController : ControllerBase
         await _sender.Send(new DeclareStationaryCommand(id, request.UnitId), cancellationToken);
         return Ok();
     }
+
+    [HttpPost("{id:guid}/shoot-unit")]
+    public async Task<IActionResult> ShootUnit(Guid id, [FromBody] ShootUnitRequest request, CancellationToken cancellationToken)
+    {
+        var result = await _sender.Send(new ShootUnitCommand(id, request.ShootingUnitId, request.FigureShots), cancellationToken);
+        return Ok(result);
+    }
 }
 
 /// <summary>
@@ -87,3 +96,9 @@ public record MoveUnitRequest(Guid UnitId, Wargame.Domain.Enums.MovementType Mov
 /// DTO pour la déclaration d'immobilité.
 /// </summary>
 public record DeclareStationaryRequest(Guid UnitId);
+
+/// <summary>
+/// DTO pour la requête de tir.
+/// </summary>
+public record ShootUnitRequest(Guid ShootingUnitId, List<FigureShootDto> FigureShots);
+
