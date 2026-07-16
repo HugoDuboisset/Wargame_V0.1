@@ -38,15 +38,18 @@ public class ShootUnitCommandHandler : IRequestHandler<ShootUnitCommand, Shootin
     private readonly IGameMatchRepository _repository;
     private readonly ShootingResolutionService _shootingResolutionService;
     private readonly ShootingValidationService _shootingValidationService;
+    private readonly DamageResolutionService _damageResolutionService;
 
     public ShootUnitCommandHandler(
         IGameMatchRepository repository, 
         ShootingResolutionService shootingResolutionService,
-        ShootingValidationService shootingValidationService)
+        ShootingValidationService shootingValidationService,
+        DamageResolutionService damageResolutionService)
     {
         _repository = repository;
         _shootingResolutionService = shootingResolutionService;
         _shootingValidationService = shootingValidationService;
+        _damageResolutionService = damageResolutionService;
     }
 
     public async Task<ShootingResultDto> Handle(ShootUnitCommand request, CancellationToken cancellationToken)
@@ -69,7 +72,7 @@ public class ShootUnitCommandHandler : IRequestHandler<ShootUnitCommand, Shootin
             throw new InvalidOperationException("L'unité a déjà tiré ce tour.");
 
         var opaqueTerrains = match.Board.Terrains.Where(t => t.IsOpaque).ToList();
-        var allHits = new List<Hit>();
+        var hitsByTarget = new Dictionary<Wargame.Domain.Entities.Unit, List<Hit>>();
 
         // Validation de chaque tir de figurine
         foreach (var shot in request.FigureShots)
@@ -100,13 +103,32 @@ public class ShootUnitCommandHandler : IRequestHandler<ShootUnitCommand, Shootin
 
             // Résolution du tir (génération des touches)
             var hits = _shootingResolutionService.ResolveShot(figure, shootingUnit, targetUnit, weapon, match.Board.Terrains.ToList());
-            allHits.AddRange(hits);
+            if (!hitsByTarget.ContainsKey(targetUnit))
+                hitsByTarget[targetUnit] = [];
+            hitsByTarget[targetUnit].AddRange(hits);
         }
 
         // Pour l'infanterie : une seule arme par figurine (déjà garanti par le DTO)
         // Pour les véhicules : peuvent tirer avec toutes leurs armes (pas de contrainte supplémentaire)
 
-        // TODO Commit 4 : résoudre les jets de Blessure et retirer les pertes
+        int totalHits = 0;
+        int totalWounds = 0;
+        int figuresDestroyed = 0;
+
+        // Résolution des blessures et application des dégâts pour chaque unité cible
+        foreach (var kvp in hitsByTarget)
+        {
+            var targetUnit = kvp.Key;
+            var hits = kvp.Value;
+            totalHits += hits.Count;
+
+            var (wounds, destroyed) = _damageResolutionService.ResolveWoundsAndApplyDamage(
+                hits, shootingUnit, targetUnit, opaqueTerrains);
+
+            totalWounds += wounds;
+            figuresDestroyed += destroyed;
+        }
+
         // TODO Commit 5 : déclencher le test de Moral si nécessaire
 
         shootingUnit.RegisterFired();
@@ -114,9 +136,9 @@ public class ShootUnitCommandHandler : IRequestHandler<ShootUnitCommand, Shootin
 
         // Résultat provisoire
         return new ShootingResultDto(
-            TotalHits: allHits.Count, 
-            TotalWounds: 0, 
-            FiguresDestroyed: 0, 
+            TotalHits: totalHits, 
+            TotalWounds: totalWounds, 
+            FiguresDestroyed: figuresDestroyed, 
             MoraleTestTriggered: false, 
             MoraleTestPassed: false, 
             TargetPinnedDown: false);
