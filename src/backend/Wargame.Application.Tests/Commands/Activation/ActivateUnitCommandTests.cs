@@ -7,10 +7,14 @@ using Wargame.Domain.Enums;
 using Wargame.Domain.Services;
 using Wargame.Domain.ValueObjects;
 
+using Wargame.Domain.ValueObjects.Geometry.Bases;
+
 namespace Wargame.Application.Tests.Commands.Activation;
 
 public class ActivateUnitCommandTests
 {
+    private static readonly CircularBase StandardBase = new(12.5); // 25mm diameter
+
     private readonly Mock<IGameMatchRepository> _repositoryMock;
     private readonly ActivateUnitCommandHandler _handler;
     private readonly Wargame.Domain.Entities.GameMatch _match;
@@ -32,7 +36,7 @@ public class ActivateUnitCommandTests
         _match = new Wargame.Domain.Entities.GameMatch(Guid.NewGuid(), new List<Player> { player1, player2 }, board);
 
         var profile = new UnitProfile(6, 4, 4, 4, 7, ArmorClass.Light);
-        _unit = new Unit(Guid.NewGuid(), "Tireurs d'élite", UnitType.Infantry, profile, new List<Figure> { new Figure(Guid.NewGuid(), 1, 25, new Position(0, 0)) });
+        _unit = new Unit(Guid.NewGuid(), "Tireurs d'élite", UnitType.Infantry, profile, new List<Figure> { new Figure(Guid.NewGuid(), 1, StandardBase, new Position(0, 0)) });
         
         _match.AddUnit(_unit);
         player1.AddUnit(_unit.Id);

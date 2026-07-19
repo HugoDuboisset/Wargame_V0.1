@@ -5,12 +5,13 @@ using Wargame.Domain.Enums;
 using Wargame.Domain.Services;
 using Wargame.Domain.ValueObjects;
 using Wargame.Domain.ValueObjects.Geometry;
+using Wargame.Domain.ValueObjects.Geometry.Bases;
 
 namespace Wargame.Domain.Tests.Services;
 
 public class ShootingResolutionServiceTests
 {
-    private const int StandardBaseSizeMm = 25;
+    private static readonly CircularBase StandardBase = new(12.5); // 25mm diameter
 
     private ShootingResolutionService CreateService(IDiceRoller? diceRoller = null)
     {
@@ -27,7 +28,7 @@ public class ShootingResolutionServiceTests
         int explosiveHits = 0)
     {
         var shooterProfile = new UnitProfile(6.0, shootingSkill, 4, 4, 7, ArmorClass.Light);
-        var shooter = new Figure(Guid.NewGuid(), 1, StandardBaseSizeMm, new Position(0, 0));
+        var shooter = new Figure(Guid.NewGuid(), 1, StandardBase, new Position(0, 0));
         
         var weaponProfile = new WeaponProfile(WeaponType.Ranged, weaponRange, weaponAttacks, 1, RangedWeaponCaliber.SmallCaliber, null, traits, explosiveHits);
         var weapon = new Weapon(Guid.NewGuid(), "Test Weapon", weaponProfile);
@@ -36,8 +37,8 @@ public class ShootingResolutionServiceTests
         shootingUnit.SetMovement(movement);
 
         var targetProfile = new UnitProfile(6.0, 4, 4, 4, 7, ArmorClass.Light);
-        double radiusInches = (StandardBaseSizeMm / 2.0) / 25.4;
-        var targetFigure = new Figure(Guid.NewGuid(), 1, StandardBaseSizeMm, new Position(targetDistance + (2 * radiusInches), 0));
+        double radiusInches = StandardBase.RadiusInches;
+        var targetFigure = new Figure(Guid.NewGuid(), 1, StandardBase, new Position(targetDistance + (2 * radiusInches), 0));
         var targetUnit = new Unit(Guid.NewGuid(), "Target", UnitType.Infantry, targetProfile, [targetFigure]);
 
         return (shooter, shootingUnit, targetUnit, weapon);

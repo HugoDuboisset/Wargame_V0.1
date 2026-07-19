@@ -75,7 +75,7 @@ public class DisengageUnitCommandHandler : IRequestHandler<DisengageUnitCommand,
                 throw new InvalidOperationException($"La figurine {dto.FigureId} n'appartient pas à cette unité.");
 
             var newPos = new Position(dto.X, dto.Y);
-            var dist = figure.GetEdgeDistanceToPosition(newPos, figure.BaseSizeMm);
+            var dist = figure.GetEdgeDistanceToPosition(newPos, figure.BaseShape, figure.OrientationDegrees);
             
             if (dist > m)
                 throw new InvalidOperationException($"La figurine {figure.Id} dépasse la distance maximale de {m}\".");

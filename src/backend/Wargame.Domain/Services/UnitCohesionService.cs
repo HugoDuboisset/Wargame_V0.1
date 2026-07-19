@@ -30,10 +30,12 @@ public class UnitCohesionService
         {
             var posA = simulatedPositions?.GetValueOrDefault(a.Id, a.Position) ?? a.Position;
             var posB = simulatedPositions?.GetValueOrDefault(b.Id, b.Position) ?? b.Position;
+            // On utilise GetEdgeDistanceTo quand les positions ne sont pas simulées,
+            // sinon on délègue à la forme de base (les orientations ne changent pas lors des simulations de mouvement d'infanterie)
+            if (simulatedPositions == null)
+                return a.GetEdgeDistanceTo(b);
             var centreToCentre = posA.DistanceTo(posB);
-            var radiusA = (a.BaseSizeMm / 2.0) / 25.4;
-            var radiusB = (b.BaseSizeMm / 2.0) / 25.4;
-            return centreToCentre - radiusA - radiusB;
+            return a.BaseShape.GetShortestDistanceTo(posA, a.OrientationDegrees, b.BaseShape, posB, b.OrientationDegrees);
         }
 
         // 1. Vérification des degrés

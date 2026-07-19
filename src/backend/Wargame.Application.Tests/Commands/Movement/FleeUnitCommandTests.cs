@@ -7,12 +7,16 @@ using Wargame.Domain.Entities;
 using Wargame.Domain.Enums;
 using Wargame.Domain.Services;
 using Wargame.Domain.ValueObjects;
+using Wargame.Domain.ValueObjects;
+using Wargame.Domain.ValueObjects.Geometry.Bases;
 using DomainUnit = Wargame.Domain.Entities.Unit;
 
 namespace Wargame.Application.Tests.Commands.Movement;
 
 public class FleeUnitCommandTests
 {
+    private static readonly CircularBase StandardBase = new(12.5); // 25mm diameter
+
     private readonly Mock<IGameMatchRepository> _repositoryMock;
 
     public FleeUnitCommandTests()
@@ -49,8 +53,8 @@ public class FleeUnitCommandTests
         var p1 = new UnitProfile(6, 4, 4, 4, 7, ArmorClass.Light);
 
         // U1 at 10,10. Left edge distance = 10. Bottom edge distance = 10.
-        var f1 = new Figure(Guid.NewGuid(), 2, 25, new Position(10, 10), null, [weapon1]);
-        var f2 = new Figure(Guid.NewGuid(), 2, 25, new Position(11, 10), null, [weapon1]);
+        var f1 = new Figure(Guid.NewGuid(), 2, StandardBase, new Position(10, 10), meleeWeapons: [weapon1]);
+        var f2 = new Figure(Guid.NewGuid(), 2, StandardBase, new Position(11, 10), meleeWeapons: [weapon1]);
 
         var u1 = new DomainUnit(Guid.NewGuid(), "Unit 1", UnitType.Infantry, p1, [f1]);
         var u2 = new DomainUnit(Guid.NewGuid(), "Unit 2", UnitType.Infantry, p1, [f2]);

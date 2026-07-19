@@ -1,6 +1,7 @@
 using Wargame.Domain.Entities;
 using Wargame.Domain.Enums;
 using Wargame.Domain.ValueObjects;
+using Wargame.Domain.ValueObjects.Geometry.Bases;
 
 namespace Wargame.Domain.Factories;
 
@@ -60,11 +61,12 @@ public class UnitBuilder
     /// Pour simplifier, cette méthode construit des figures basiques qui pourront être équipées ensuite,
     /// ou passées directement équipées.
     /// </summary>
-    public UnitBuilder AddFigures(int count, int hitPoints = 1, int baseSizeMm = 25)
+    public UnitBuilder AddFigures(int count, int hitPoints = 1, IBaseShape? baseShape = null)
     {
+        var shape = baseShape ?? new CircularBase(12.5); // Par défaut : socle 25mm
         for (int i = 0; i < count; i++)
         {
-            _figures.Add(new Figure(Guid.NewGuid(), hitPoints, baseSizeMm, new Position(0, 0)));
+            _figures.Add(new Figure(Guid.NewGuid(), hitPoints, shape, new Position(0, 0)));
         }
         return this;
     }

@@ -369,6 +369,9 @@ Si une figurine sort de la table lors de ce mouvement, l'unité est considérée
 
 Une unité en fuite a le statut Démoralisé et En fuite jusqu'à sa prochaine activation.
 
+## Mouvement de rapprochement
+Lorsque qu'une unité subit des pertes lors d'un tir ou d'un corps à corps, si des figurines sont isolées et hors de cohésion d'unité, elles doivent faire un mouvement de 2" pour tenter de retourner en cohésion d'unité. Si ce mouvement n'est pas suffisant, elles sont considérées comme ayant déserter et sont détruites. 
+
 ## Terrains et système de couverture
 
 Un champ de bataille prend de l'intérêt par ses zones de couvertures permettant aux troupes de se cacher, se protéger des tirs ennemis et tendre des embuscades.
@@ -400,6 +403,9 @@ Mécanique : La ligne de vue est bloquée par cette zone. Si une ligne de vue tr
 Exemples : Mur en béton armé sans fenêtres, bâtiment debout, conteneur, épave de char
 
 Ces décors peuvent se manifester par des zones ou des éléments isolés.
+
+### Terrains infranchissables
+Il n'est pas possible d'effectuer un mouvement au travers de ces éléments de terrain.
 
 ### Combinaison de décors
 

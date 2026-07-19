@@ -2,6 +2,7 @@ using FluentAssertions;
 using Wargame.Domain.Entities;
 using Wargame.Domain.Enums;
 using Wargame.Domain.ValueObjects;
+using Wargame.Domain.ValueObjects.Geometry.Bases;
 using Wargame.Infrastructure.Repositories;
 using Xunit;
 using System.Text.Json;
@@ -20,7 +21,7 @@ public class JsonUnitRepositoryTests : JsonRepositoryTestBase
         
         var weapon = new Weapon(Guid.NewGuid(), "Rifle", 
             new WeaponProfile(WeaponType.Ranged, 24, 2, 4, RangedWeaponCaliber.MediumCaliber, null, WeaponTrait.None));
-        var figure = new Figure(Guid.NewGuid(), 1, 25, new Position(0, 0), [weapon]);
+        var figure = new Figure(Guid.NewGuid(), 1, new CircularBase(12.5), new Position(0, 0), rangedWeapons: [weapon]);
         var profile = new UnitProfile(6, 4, 4, 4, 7, ArmorClass.Light);
         
         var unit = new Unit(unitId, "Test Squad", UnitType.Infantry, profile, [figure]);

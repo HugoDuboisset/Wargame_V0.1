@@ -6,12 +6,13 @@ using Wargame.Application.Interfaces.Repositories;
 using Wargame.Domain.Entities;
 using Wargame.Domain.Enums;
 using Wargame.Domain.ValueObjects;
+using Wargame.Domain.ValueObjects.Geometry.Bases;
 
 namespace Wargame.Application.Tests.Commands.Shooting;
 
 public class ShootUnitCommandTests
 {
-    private const int BaseSizeMm = 25; // socle standard 25mm
+    private static readonly CircularBase StandardBase = new(12.5); // 25mm diameter
 
     private readonly Mock<IGameMatchRepository> _repositoryMock = new();
 
@@ -33,7 +34,7 @@ public class ShootUnitCommandTests
         var weaponProfile = new WeaponProfile(WeaponType.Ranged, weaponRange, 1, 1, RangedWeaponCaliber.SmallCaliber, null, traits);
         var weapon = new Weapon(Guid.NewGuid(), "Test Weapon", weaponProfile);
         
-        var shooterFigure = new Figure(Guid.NewGuid(), 1, BaseSizeMm, new Position(0, 0), [weapon]);
+        var shooterFigure = new Figure(Guid.NewGuid(), 1, StandardBase, new Position(0, 0), rangedWeapons: [weapon]);
 
         var shootingUnit = new Unit(Guid.NewGuid(), "Shooter", shooterType, shooterProfile, [shooterFigure]);
         
@@ -45,12 +46,12 @@ public class ShootUnitCommandTests
         // Cible en (distanceInches + diametre du socle pour avoir la distance bord a bord exacte, mais simplifié ici)
         // Distance bord à bord = centre à centre - rayonA - rayonB
         // Si je veux que getEdgeDistanceTo = distanceInches, je dois positionner le centre à :
-        // distanceInches + (2 * (BaseSizeMm / 2 / 25.4))
-        double radiusInches = (BaseSizeMm / 2.0) / 25.4;
+        // distanceInches + (2 * rayon)
+        double radiusInches = StandardBase.RadiusInches;
         double centerDistance = distanceInches + (2 * radiusInches);
         
         var targetProfile = new UnitProfile(6.0, 4, 4, 4, 7, ArmorClass.Light);
-        var targetFigure = new Figure(Guid.NewGuid(), 1, BaseSizeMm, new Position(centerDistance, 0));
+        var targetFigure = new Figure(Guid.NewGuid(), 1, StandardBase, new Position(centerDistance, 0));
         var targetUnit = new Unit(Guid.NewGuid(), "Target", UnitType.Infantry, targetProfile, [targetFigure]);
 
         if (shooterEngaged)
@@ -289,7 +290,7 @@ public class ShootUnitCommandTests
 
         // Création d'une autre cible NON engagée avec le tireur
         var otherTargetProfile = new UnitProfile(6.0, 4, 4, 4, 7, ArmorClass.Light);
-        var otherTargetFigure = new Figure(Guid.NewGuid(), 1, BaseSizeMm, new Position(10, 10));
+        var otherTargetFigure = new Figure(Guid.NewGuid(), 1, StandardBase, new Position(10, 10));
         var otherTarget = new Unit(Guid.NewGuid(), "Other Target", UnitType.Infantry, otherTargetProfile, [otherTargetFigure]);
         match.AddUnit(otherTarget);
         

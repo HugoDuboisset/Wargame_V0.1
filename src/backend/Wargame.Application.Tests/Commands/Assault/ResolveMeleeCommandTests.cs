@@ -6,6 +6,7 @@ using Wargame.Domain.Entities;
 using Wargame.Domain.Enums;
 using Wargame.Domain.Services;
 using Wargame.Domain.ValueObjects;
+using Wargame.Domain.ValueObjects.Geometry.Bases;
 using Xunit;
 using DomainMatch = Wargame.Domain.Entities.GameMatch;
 
@@ -13,7 +14,7 @@ namespace Wargame.Application.Tests.Commands.Assault;
 
 public class ResolveMeleeCommandTests
 {
-    private const int BaseSizeMm = 25;
+    private static readonly CircularBase StandardBase = new(12.5);
     private readonly Mock<IGameMatchRepository> _repositoryMock = new();
 
     private (DomainMatch match, Unit u1, Unit u2) CreateEngagedUnits(
@@ -37,8 +38,8 @@ public class ResolveMeleeCommandTests
         var p1 = new UnitProfile(6, 4, u1Combat, u1Init, 7, ArmorClass.Light);
         var p2 = new UnitProfile(6, 4, u2Combat, u2Init, 7, ArmorClass.Light); // Morale 7, Init 4
 
-        var f1 = new Figure(Guid.NewGuid(), 2, BaseSizeMm, new Position(0, 0), null, [weapon1]);
-        var f2 = new Figure(Guid.NewGuid(), 2, BaseSizeMm, new Position(0.5, 0), null, [weapon2]); // 2 HP
+        var f1 = new Figure(Guid.NewGuid(), 2, StandardBase, new Position(0, 0), meleeWeapons: [weapon1]);
+        var f2 = new Figure(Guid.NewGuid(), 2, StandardBase, new Position(0.5, 0), meleeWeapons: [weapon2]); // 2 HP
 
         var u1 = new Unit(Guid.NewGuid(), "Unit 1", UnitType.Infantry, p1, [f1]);
         var u2 = new Unit(Guid.NewGuid(), "Unit 2", UnitType.Infantry, p2, [f2]);

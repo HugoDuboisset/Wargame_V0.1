@@ -1,0 +1,3 @@
+Ajouter du pathfinding pour gérer les décors infranchissables (bulle dans le front qui permet de voir où l'on peut placer la figurine qui prend ça en compte)
+gérer plusieurs pivots dans le meme mouvement d'un véhicule
+

@@ -6,13 +6,14 @@ using Wargame.Domain.Entities;
 using Wargame.Domain.Enums;
 using Wargame.Domain.Services;
 using Wargame.Domain.ValueObjects;
+using Wargame.Domain.ValueObjects.Geometry.Bases;
 using Xunit;
 
 namespace Wargame.Application.Tests.Commands.Assault;
 
 public class ChargeUnitCommandTests
 {
-    private const int BaseSizeMm = 25;
+    private static readonly CircularBase StandardBase = new(12.5);
     private readonly Mock<IGameMatchRepository> _repositoryMock = new();
 
     private (Wargame.Domain.Entities.GameMatch match, Unit chargingUnit, Unit targetUnit) CreateMatchWithUnits(
@@ -27,15 +28,15 @@ public class ChargeUnitCommandTests
 
         // Chargeur en (0,0), M=chargingUnitMovement"
         var chargerProfile = new UnitProfile(chargingUnitMovement, 4, 4, 4, 7, ArmorClass.Light);
-        var chargerFigure = new Figure(Guid.NewGuid(), 1, BaseSizeMm, new Position(0, 0));
+        var chargerFigure = new Figure(Guid.NewGuid(), 1, StandardBase, new Position(0, 0));
         var chargingUnit = new Unit(Guid.NewGuid(), "Charger", UnitType.Infantry, chargerProfile, [chargerFigure]);
         if (chargerMovement != MovementType.None) chargingUnit.SetMovement(chargerMovement);
 
         // Cible placée à targetEdgeDistanceInches bord-à-bord
-        double radiusInches = (BaseSizeMm / 2.0) / 25.4;
+        double radiusInches = StandardBase.RadiusInches;
         double centerDistance = targetEdgeDistanceInches + (2 * radiusInches);
         var targetProfile = new UnitProfile(6.0, 4, 4, 4, 7, ArmorClass.Light);
-        var targetFigure = new Figure(Guid.NewGuid(), 1, BaseSizeMm, new Position(centerDistance, 0));
+        var targetFigure = new Figure(Guid.NewGuid(), 1, StandardBase, new Position(centerDistance, 0));
         var targetUnit = new Unit(Guid.NewGuid(), "Target", UnitType.Infantry, targetProfile, [targetFigure]);
 
         match.AddUnit(chargingUnit);

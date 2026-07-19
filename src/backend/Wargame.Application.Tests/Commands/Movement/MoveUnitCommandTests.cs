@@ -6,13 +6,14 @@ using Wargame.Application.Interfaces.Repositories;
 using Wargame.Domain.Entities;
 using Wargame.Domain.Enums;
 using Wargame.Domain.ValueObjects;
+using Wargame.Domain.ValueObjects.Geometry.Bases;
 
 namespace Wargame.Application.Tests.Commands.Movement;
 
 public class MoveUnitCommandTests
 {
-    private const int BaseSizeMm = 25; // socle standard 25mm
-    private const double BaseRadiusInches = BaseSizeMm / 2.0 / 25.4; // ~0.492"
+    private static readonly CircularBase StandardBase = new(12.5); // 25mm diameter
+    private static readonly double BaseRadiusInches = new CircularBase(12.5).RadiusInches;
 
     private readonly Mock<IGameMatchRepository> _repositoryMock = new();
 
@@ -26,7 +27,7 @@ public class MoveUnitCommandTests
 
         var profile = new UnitProfile(movement, 4, 4, 4, 7, ArmorClass.Light);
         var figures = Enumerable.Range(0, figureCount)
-            .Select(i => new Figure(Guid.NewGuid(), 1, BaseSizeMm, new Position(i * 2.0, 0)))
+            .Select(i => new Figure(Guid.NewGuid(), 1, StandardBase, new Position(i * 2.0, 0)))
             .ToList<Figure>();
 
         var unit = new Unit(Guid.NewGuid(), "Test Unit", UnitType.Infantry, profile, figures);
@@ -162,7 +163,7 @@ public class MoveUnitCommandTests
 
         // Créer une unité ennemie à (5, 0) avec socle 25mm
         var enemyProfile = new UnitProfile(6, 4, 4, 4, 7, ArmorClass.Light);
-        var enemyFigure = new Figure(Guid.NewGuid(), 1, BaseSizeMm, new Position(5, 0));
+        var enemyFigure = new Figure(Guid.NewGuid(), 1, StandardBase, new Position(5, 0));
         var enemyUnit = new Unit(Guid.NewGuid(), "Enemy", UnitType.Infantry, enemyProfile, [enemyFigure]);
         match.AddUnit(enemyUnit);
 

@@ -1,5 +1,6 @@
 using Wargame.Domain.Entities;
 using Wargame.Domain.ValueObjects;
+using Wargame.Domain.ValueObjects.Geometry.Bases;
 
 namespace Wargame.Domain.Services;
 
@@ -48,7 +49,7 @@ public class AssaultMovementService
         var occupiedAfterMove = new List<(Position Center, double RadiusMm)>();
         foreach (var def in aliveDefenders)
         {
-            occupiedAfterMove.Add((def.Position, def.BaseSizeMm / 2.0));
+            occupiedAfterMove.Add((def.Position, GetApproximateRadiusMm(def)));
         }
 
         foreach (var attacker in sortedAttackers)
@@ -76,13 +77,13 @@ public class AssaultMovementService
             {
                 // Ne peut pas atteindre la cible : se rapprocher le maximum
                 newPos = MoveTowardTarget(attacker.Position, closestTarget.Position,
-                    maxMove, attacker.BaseSizeMm, occupiedAfterMove);
+                    maxMove, GetApproximateRadiusMm(attacker), occupiedAfterMove);
             }
 
             results.Add((attacker, newPos));
 
             // Ajouter la nouvelle position dans les positions occupées
-            occupiedAfterMove.Add((newPos, attacker.BaseSizeMm / 2.0));
+            occupiedAfterMove.Add((newPos, GetApproximateRadiusMm(attacker)));
         }
 
         return results;
@@ -113,10 +114,10 @@ public class AssaultMovementService
         var occupiedAfterMove = new List<(Position Center, double RadiusMm)>();
         // Les positions des défenseurs sont fixes
         foreach (var def in aliveDefenders)
-            occupiedAfterMove.Add((def.Position, def.BaseSizeMm / 2.0));
+            occupiedAfterMove.Add((def.Position, GetApproximateRadiusMm(def)));
         // Les positions des attaquants restent les leurs jusqu'à ce qu'on les déplace
         foreach (var att in aliveAttackers)
-            occupiedAfterMove.Add((att.Position, att.BaseSizeMm / 2.0));
+            occupiedAfterMove.Add((att.Position, GetApproximateRadiusMm(att)));
 
         foreach (var attacker in sortedAttackers)
         {
@@ -132,7 +133,7 @@ public class AssaultMovementService
             // Retirer la position actuelle de cet attaquant (il va bouger)
             occupiedAfterMove.RemoveAll(o =>
                 o.Center.DistanceTo(attacker.Position) < 0.001 &&
-                Math.Abs(o.RadiusMm - attacker.BaseSizeMm / 2.0) < 0.001);
+                Math.Abs(o.RadiusMm - GetApproximateRadiusMm(attacker)) < 0.001);
 
             var closestTarget = aliveDefenders.OrderBy(d => attacker.GetEdgeDistanceTo(d)).First();
 
@@ -146,11 +147,11 @@ public class AssaultMovementService
             else
             {
                 newPos = MoveTowardTarget(attacker.Position, closestTarget.Position,
-                    ConsolidationDistance, attacker.BaseSizeMm, occupiedAfterMove);
+                    ConsolidationDistance, GetApproximateRadiusMm(attacker), occupiedAfterMove);
             }
 
             results.Add((attacker, newPos));
-            occupiedAfterMove.Add((newPos, attacker.BaseSizeMm / 2.0));
+            occupiedAfterMove.Add((newPos, GetApproximateRadiusMm(attacker)));
         }
 
         return results;
@@ -168,8 +169,8 @@ public class AssaultMovementService
         List<(Position Center, double RadiusMm)> occupied,
         IReadOnlyList<Figure> allAttackers)
     {
-        double attackerRadiusMm = attacker.BaseSizeMm / 2.0;
-        double targetRadiusMm = primaryTarget.BaseSizeMm / 2.0;
+        double attackerRadiusMm = GetApproximateRadiusMm(attacker);
+        double targetRadiusMm = GetApproximateRadiusMm(primaryTarget);
         // Distance centre-à-centre pour être en contact socle-à-socle
         double contactCenterDist = (attackerRadiusMm + targetRadiusMm) / 25.4;
 
@@ -199,7 +200,7 @@ public class AssaultMovementService
         // Aucune position de contact libre : se rapprocher le maximum possible
         return MoveTowardTarget(
             attacker.Position, primaryTarget.Position,
-            double.MaxValue, attacker.BaseSizeMm, occupied);
+            double.MaxValue, GetApproximateRadiusMm(attacker), occupied);
     }
 
     /// <summary>
@@ -208,7 +209,7 @@ public class AssaultMovementService
     /// </summary>
     private static Position MoveTowardTarget(
         Position from, Position to, double maxMoveInches,
-        int baseSizeMm, List<(Position Center, double RadiusMm)> occupied)
+        double radiusMm, List<(Position Center, double RadiusMm)> occupied)
     {
         double dx = to.X - from.X;
         double dy = to.Y - from.Y;
@@ -225,7 +226,7 @@ public class AssaultMovementService
 
         // Si cette position crée une superposition, on essaie de réduire le déplacement
         // par incréments de 10% jusqu'à trouver une position libre
-        while (OverlapsAny(candidate, baseSizeMm / 2.0, occupied) && moveAmount > 0.01)
+        while (OverlapsAny(candidate, radiusMm, occupied) && moveAmount > 0.01)
         {
             moveAmount *= 0.9;
             ratio = moveAmount / totalDist;
@@ -252,5 +253,19 @@ public class AssaultMovementService
                 return true;
         }
         return false;
+    }
+    /// <summary>
+    /// Retourne le rayon approximatif d'une figurine en millimètres,
+    /// que son socle soit circulaire ou rectangulaire.
+    /// Pour les rectangles, on utilise la demi-diagonale comme approximation conservative.
+    /// </summary>
+    private static double GetApproximateRadiusMm(Figure figure)
+    {
+        return figure.BaseShape switch
+        {
+            CircularBase circle => circle.RadiusMm,
+            RectangularBase rect => Math.Sqrt(rect.LengthMm * rect.LengthMm + rect.WidthMm * rect.WidthMm) / 2.0,
+            _ => 12.5 // Fallback : 25mm de diamètre
+        };
     }
 }

@@ -2,12 +2,14 @@ using FluentAssertions;
 using Wargame.Domain.Entities;
 using Wargame.Domain.Services;
 using Wargame.Domain.ValueObjects;
+using Wargame.Domain.ValueObjects.Geometry.Bases;
 
 namespace Wargame.Domain.Tests.Services;
 
 public class UnitCohesionServiceTests
 {
     private readonly UnitCohesionService _service;
+    private static readonly CircularBase StandardBase = new(12.5); // 25mm diameter
 
     public UnitCohesionServiceTests()
     {
@@ -16,8 +18,7 @@ public class UnitCohesionServiceTests
 
     private static Figure CreateFigure(Guid id, double x, double y)
     {
-        // Supposons socle de 25mm => rayon = 12.5mm = 0.492"
-        return new Figure(id, 1, 25, new Position(x, y));
+        return new Figure(id, 1, StandardBase, new Position(x, y));
     }
 
     [Fact]

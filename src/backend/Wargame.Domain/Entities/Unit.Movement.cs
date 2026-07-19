@@ -52,7 +52,7 @@ public partial class Unit
         foreach (var move in moves)
         {
             var figure = _figures.FirstOrDefault(f => f.Id == move.FigureId);
-            figure?.MoveTo(move.NewPosition);
+            figure?.MoveTo(move.NewPosition, move.TargetOrientationDegrees);
         }
         SetMovement(type);
     }

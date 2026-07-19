@@ -3,16 +3,19 @@ using Wargame.Domain.Entities;
 using Wargame.Domain.Enums;
 using Wargame.Domain.Services;
 using Wargame.Domain.ValueObjects;
+using Wargame.Domain.ValueObjects.Geometry.Bases;
 using Xunit;
 
 namespace Wargame.Domain.Tests.Services;
 
 public class MoraleResolutionServiceTests
 {
+    private static readonly CircularBase StandardBase = new(12.5); // 25mm diameter
+
     private Unit CreateUnitWithMorale(int morale)
     {
         var profile = new UnitProfile(6.0, 4, 4, 4, morale, ArmorClass.Light);
-        var figure = new Figure(Guid.NewGuid(), 1, 25, new Position(0, 0));
+        var figure = new Figure(Guid.NewGuid(), 1, StandardBase, new Position(0, 0));
         return new Unit(Guid.NewGuid(), "Test Unit", UnitType.Infantry, profile, [figure]);
     }
 
@@ -50,10 +53,10 @@ public class MoraleResolutionServiceTests
         var profile = new UnitProfile(6.0, 4, 4, 4, 7, ArmorClass.Light);
         var figures = new List<Figure>
         {
-            new(Guid.NewGuid(), 1, 25, new Position(0, 0)),
-            new(Guid.NewGuid(), 1, 25, new Position(0, 0)),
-            new(Guid.NewGuid(), 1, 25, new Position(0, 0)),
-            new(Guid.NewGuid(), 1, 25, new Position(0, 0)) // 4 figurines au total
+            new(Guid.NewGuid(), 1, StandardBase, new Position(0, 0)),
+            new(Guid.NewGuid(), 1, StandardBase, new Position(0, 0)),
+            new(Guid.NewGuid(), 1, StandardBase, new Position(0, 0)),
+            new(Guid.NewGuid(), 1, StandardBase, new Position(0, 0)) // 4 figurines au total
         };
         var unit = new Unit(Guid.NewGuid(), "Test Unit", UnitType.Infantry, profile, figures);
 

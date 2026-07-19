@@ -1,5 +1,6 @@
 using Wargame.Domain.Primitives;
 using Wargame.Domain.ValueObjects;
+using Wargame.Domain.ValueObjects.Geometry.Bases;
 
 namespace Wargame.Domain.Entities;
 
@@ -17,7 +18,15 @@ public class Figure : Entity
 
     public int MaxHitPoints { get; private set; }
 
-    public int BaseSizeMm { get; private set; }
+    /// <summary>Forme géométrique du socle (Cercle pour l'infanterie, Rectangle pour les véhicules).</summary>
+    public IBaseShape BaseShape { get; private set; }
+
+    /// <summary>
+    /// Orientation de la figurine en degrés.
+    /// Uniquement significatif pour les socles rectangulaires (véhicules).
+    /// Convention : 0° = face avant vers l'axe X+, positif = sens antihoraire.
+    /// </summary>
+    public double OrientationDegrees { get; private set; }
 
     public Position Position { get; private set; }
 
@@ -29,8 +38,9 @@ public class Figure : Entity
     public Figure(
         Guid id,
         int maxHitPoints,
-        int baseSizeMm,
+        IBaseShape baseShape,
         Position position,
+        double orientationDegrees = 0,
         IReadOnlyList<Weapon>? rangedWeapons = null,
         IReadOnlyList<Weapon>? meleeWeapons = null) : base(id)
     {
@@ -39,8 +49,9 @@ public class Figure : Entity
 
         MaxHitPoints = maxHitPoints;
         CurrentHitPoints = maxHitPoints;
-        BaseSizeMm = baseSizeMm;
+        BaseShape = baseShape ?? throw new ArgumentNullException(nameof(baseShape));
         Position = position;
+        OrientationDegrees = orientationDegrees;
 
         if (rangedWeapons != null) _rangedWeapons.AddRange(rangedWeapons);
         if (meleeWeapons != null) _meleeWeapons.AddRange(meleeWeapons);
@@ -56,9 +67,11 @@ public class Figure : Entity
         return !IsAlive;
     }
 
-    public void MoveTo(Position newPosition)
+    public void MoveTo(Position newPosition, double? newOrientationDegrees = null)
     {
         Position = newPosition;
+        if (newOrientationDegrees.HasValue)
+            OrientationDegrees = newOrientationDegrees.Value;
     }
 
     public void AddRangedWeapon(Weapon weapon)
@@ -75,27 +88,24 @@ public class Figure : Entity
 
     /// <summary>
     /// Calcule la distance bord à bord entre cette figurine et une autre.
-    /// Les socles sont circulaires ; les rayons sont convertis de mm en pouces (÷ 25.4).
+    /// Supporte les socles circulaires et rectangulaires via IBaseShape.
     /// Une valeur négative ou nulle signifie que les socles sont en contact ou chevauchants.
     /// </summary>
     public double GetEdgeDistanceTo(Figure other)
     {
-        var centreToCentre = Position.DistanceTo(other.Position);
-        var radiusA = (BaseSizeMm / 2.0) / 25.4;
-        var radiusB = (other.BaseSizeMm / 2.0) / 25.4;
-        return centreToCentre - radiusA - radiusB;
+        return BaseShape.GetShortestDistanceTo(
+            Position, OrientationDegrees,
+            other.BaseShape, other.Position, other.OrientationDegrees);
     }
 
     /// <summary>
-    /// Calcule la distance bord à bord entre cette figurine et une position de centre cible,
-    /// en supposant que l'autre figurine a le même BaseSizeMm.
+    /// Calcule la distance bord à bord entre cette figurine et un socle cible à une position donnée.
     /// Utile pour valider un déplacement avant de l'appliquer.
     /// </summary>
-    public double GetEdgeDistanceToPosition(Position targetCenter, int targetBaseSizeMm)
+    public double GetEdgeDistanceToPosition(Position targetCenter, IBaseShape targetShape, double targetOrientation = 0)
     {
-        var centreToCentre = Position.DistanceTo(targetCenter);
-        var radiusA = (BaseSizeMm / 2.0) / 25.4;
-        var radiusB = (targetBaseSizeMm / 2.0) / 25.4;
-        return centreToCentre - radiusA - radiusB;
+        return BaseShape.GetShortestDistanceTo(
+            Position, OrientationDegrees,
+            targetShape, targetCenter, targetOrientation);
     }
 }

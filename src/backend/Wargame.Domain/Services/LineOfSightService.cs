@@ -27,58 +27,68 @@ public class LineOfSightService
         foreach (var ray in rays)
         {
             if (!IsRayBlocked(ray, terrains))
-            {
                 return true;
-            }
         }
 
         return false;
     }
 
     /// <summary>
-    /// Génère un faisceau de 5 rayons entre les deux figurines pour approximer la vue bord à bord :
-    /// - Centre à Centre
-    /// - Bord Gauche à Bord Gauche
-    /// - Bord Droit à Bord Droit
-    /// - Bord Gauche à Bord Droit
-    /// - Bord Droit à Bord Gauche
+    /// Génère un faisceau de rayons entre les deux figurines.
+    /// - Pour un socle circulaire : on utilise le centre + les tangentes gauche/droite.
+    /// - Pour un socle rectangulaire : on utilise les 4 coins.
+    /// On trace des rayons depuis chaque point d'origine du tireur vers chaque point de la cible.
     /// </summary>
     private static IReadOnlyList<(Position Start, Position End)> GenerateSightRays(Figure shooter, Figure target)
     {
         var rays = new List<(Position Start, Position End)>();
 
-        var centerA = shooter.Position;
-        var centerB = target.Position;
+        var shooterOrigins = GetKeyPoints(shooter, target.Position);
+        var targetOrigins = GetKeyPoints(target, shooter.Position);
 
-        rays.Add((centerA, centerB));
+        foreach (var start in shooterOrigins)
+            foreach (var end in targetOrigins)
+                rays.Add((start, end));
 
-        double dx = centerB.X - centerA.X;
-        double dy = centerB.Y - centerA.Y;
-        
-        // Si les figurines sont parfaitement superposées (ne devrait pas arriver), on retourne juste le centre
+        return rays;
+    }
+
+    /// <summary>
+    /// Retourne les points clés d'une figurine pour les lignes de vue.
+    /// - Socle circulaire : centre + tangentes gauche/droite par rapport à la direction vers la cible.
+    /// - Socle rectangulaire : les 4 coins du socle orienté.
+    /// </summary>
+    private static IReadOnlyList<Position> GetKeyPoints(Figure fig, Position targetPos)
+    {
+        var shapeOrigins = fig.BaseShape.GetSightRaysOrigins(fig.Position, fig.OrientationDegrees);
+
+        // Si le socle est rectangulaire (déjà les 4 coins), on les retourne directement
+        if (shapeOrigins.Count > 1)
+            return shapeOrigins;
+
+        // Socle circulaire : on ajoute les tangentes gauche et droite
+        var centre = fig.Position;
+        var points = new List<Position> { centre };
+
+        double dx = targetPos.X - centre.X;
+        double dy = targetPos.Y - centre.Y;
+
         if (Math.Abs(dx) < 0.001 && Math.Abs(dy) < 0.001)
-            return rays;
+            return points; // figurines superposées, juste le centre
 
-        // Calcul du vecteur perpendiculaire
+        // Calcul du rayon en pouces à partir du CircularBase
+        double radiusInches = 0;
+        if (fig.BaseShape is Wargame.Domain.ValueObjects.Geometry.Bases.CircularBase circle)
+            radiusInches = circle.RadiusInches;
+
         double length = Math.Sqrt(dx * dx + dy * dy);
         double perpX = -dy / length;
         double perpY = dx / length;
 
-        double radiusA = (shooter.BaseSizeMm / 2.0) / 25.4; // en pouces
-        double radiusB = (target.BaseSizeMm / 2.0) / 25.4;
+        points.Add(new Position(centre.X + perpX * radiusInches, centre.Y + perpY * radiusInches));
+        points.Add(new Position(centre.X - perpX * radiusInches, centre.Y - perpY * radiusInches));
 
-        var leftA = new Position(centerA.X + perpX * radiusA, centerA.Y + perpY * radiusA);
-        var rightA = new Position(centerA.X - perpX * radiusA, centerA.Y - perpY * radiusA);
-
-        var leftB = new Position(centerB.X + perpX * radiusB, centerB.Y + perpY * radiusB);
-        var rightB = new Position(centerB.X - perpX * radiusB, centerB.Y - perpY * radiusB);
-
-        rays.Add((leftA, leftB));
-        rays.Add((rightA, rightB));
-        rays.Add((leftA, rightB));
-        rays.Add((rightA, leftB));
-
-        return rays;
+        return points;
     }
 
     private static bool IsRayBlocked((Position Start, Position End) ray, List<Terrain> terrains)

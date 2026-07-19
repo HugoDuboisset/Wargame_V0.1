@@ -81,11 +81,54 @@ public class MoveUnitCommandHandler : IRequestHandler<MoveUnitCommand>
 
             var newPosition = new Position(dto.X, dto.Y);
 
-            // Validation de la distance maximale (bord à bord)
-            var edgeDistance = figure.GetEdgeDistanceToPosition(newPosition, figure.BaseSizeMm);
-            if (edgeDistance > maxDistance)
+            // Distance réelle (centre à centre) parcourue
+            double moveDistance = figure.Position.DistanceTo(newPosition);
+            double totalCost = moveDistance;
+
+            if (figure.BaseShape is Wargame.Domain.ValueObjects.Geometry.Bases.RectangularBase)
+            {
+                double targetOrientation = dto.TargetOrientationDegrees ?? figure.OrientationDegrees;
+                var dx = newPosition.X - figure.Position.X;
+                var dy = newPosition.Y - figure.Position.Y;
+                
+                double movementAngleDegrees = figure.OrientationDegrees;
+                if (moveDistance > 0.01) // S'il y a translation réelle
+                {
+                    movementAngleDegrees = Math.Atan2(dy, dx) * 180 / Math.PI;
+                    if (movementAngleDegrees < 0) movementAngleDegrees += 360;
+                }
+                
+                double diffFwd = Math.Abs(NormalizeAngle(movementAngleDegrees - figure.OrientationDegrees));
+                double diffRev = Math.Abs(NormalizeAngle(movementAngleDegrees - (figure.OrientationDegrees + 180)));
+                
+                // Le véhicule s'aligne (soit en marche avant, soit en marche arrière)
+                double firstPivotAngle = Math.Min(diffFwd, diffRev); 
+                double currentAngleAfterFirstPivot = diffFwd < diffRev ? movementAngleDegrees : movementAngleDegrees + 180;
+                
+                // Puis s'aligne vers sa rotation cible finale
+                double secondPivotAngle = Math.Abs(NormalizeAngle(targetOrientation - currentAngleAfterFirstPivot));
+                
+                if (moveDistance <= 0.01)
+                {
+                    // Si aucune translation, c'est un simple pivot de la position de départ à l'arrivée
+                    firstPivotAngle = Math.Abs(NormalizeAngle(targetOrientation - figure.OrientationDegrees));
+                    secondPivotAngle = 0;
+                }
+
+                // Coût : Chaque pivot de 90° (arrondi supérieur) coûte 1/3 du mouvement de base de l'unité
+                double baseUnitMovement = unit.BaseProfile.Movement;
+                double costPer90 = Math.Ceiling(baseUnitMovement / 3.0);
+                
+                int chunks1 = (int)Math.Ceiling(firstPivotAngle / 90.0);
+                int chunks2 = (int)Math.Ceiling(secondPivotAngle / 90.0);
+                
+                totalCost = moveDistance + (chunks1 * costPer90) + (chunks2 * costPer90);
+            }
+
+            if (totalCost > maxDistance)
                 throw new InvalidOperationException(
-                    $"La figurine {figure.Id} dépasse la distance maximale : {edgeDistance:F2}\" parcourus, {maxDistance}\" autorisés ({request.MovementType}).");
+                    $"La figurine {figure.Id} dépasse la distance maximale : {totalCost:F2}\" coût total, {maxDistance}\" autorisés ({request.MovementType}).");
+
 
             // Validation : aucune figurine ennemie à moins de 1" bord à bord
             var enemyFigures = match.Units
@@ -94,13 +137,13 @@ public class MoveUnitCommandHandler : IRequestHandler<MoveUnitCommand>
 
             foreach (var enemyFigure in enemyFigures)
             {
-                var distToEnemy = enemyFigure.GetEdgeDistanceToPosition(newPosition, figure.BaseSizeMm);
+                var distToEnemy = enemyFigure.GetEdgeDistanceToPosition(newPosition, figure.BaseShape, figure.OrientationDegrees);
                 if (distToEnemy < 1.0)
                     throw new InvalidOperationException(
                         $"La figurine {figure.Id} se trouve à moins de 1\" d'une figurine ennemie après déplacement. Seule la charge permet d'approcher l'ennemi.");
             }
 
-            figureMoves.Add(new FigureMove(dto.FigureId, newPosition));
+            figureMoves.Add(new FigureMove(dto.FigureId, newPosition, dto.TargetOrientationDegrees));
         }
 
         // Validation de la cohésion après déplacement (délégué au domaine)
@@ -112,5 +155,13 @@ public class MoveUnitCommandHandler : IRequestHandler<MoveUnitCommand>
         // Application du mouvement
         unit.Move(figureMoves, request.MovementType);
         await _repository.SaveAsync(match, cancellationToken);
+    }
+
+    private double NormalizeAngle(double a)
+    {
+        a = a % 360;
+        if (a <= -180) a += 360;
+        if (a > 180) a -= 360;
+        return a;
     }
 }

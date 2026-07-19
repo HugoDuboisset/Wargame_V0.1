@@ -4,13 +4,14 @@ using Wargame.Domain.Enums;
 using Wargame.Domain.Services;
 using Wargame.Domain.ValueObjects;
 using Wargame.Domain.Services.Traits;
+using Wargame.Domain.ValueObjects.Geometry.Bases;
 using Xunit;
 
 namespace Wargame.Domain.Tests.Services;
 
 public class DamageResolutionServiceTests
 {
-    private const int StandardBaseSizeMm = 25;
+    private static readonly CircularBase StandardBase = new(12.5); // 25mm diameter
 
     private (Unit shootingUnit, Unit targetUnit) SetupScenario(
         int targetHitPoints = 1,
@@ -21,14 +22,14 @@ public class DamageResolutionServiceTests
         var shooterProfile = new UnitProfile(6.0, 4, 4, 4, 7, ArmorClass.Light);
         var targetProfile = new UnitProfile(6.0, 4, 4, 4, 7, targetArmor);
 
-        var shooterFigure = new Figure(Guid.NewGuid(), 1, StandardBaseSizeMm, new Position(0, 0));
+        var shooterFigure = new Figure(Guid.NewGuid(), 1, StandardBase, new Position(0, 0));
         var shootingUnit = new Unit(Guid.NewGuid(), "Shooter", UnitType.Infantry, shooterProfile, [shooterFigure]);
 
         var targetFigures = new List<Figure>();
         for (int i = 0; i < targetFigureCount; i++)
         {
             // Les cibles sont alignées sur l'axe X (distance de 10, 12, 14, etc.)
-            targetFigures.Add(new Figure(Guid.NewGuid(), targetHitPoints, StandardBaseSizeMm, new Position(10 + (i * 2), 0)));
+            targetFigures.Add(new Figure(Guid.NewGuid(), targetHitPoints, StandardBase, new Position(10 + (i * 2), 0)));
         }
         var targetUnit = new Unit(Guid.NewGuid(), "Target", UnitType.Infantry, targetProfile, targetFigures);
 
