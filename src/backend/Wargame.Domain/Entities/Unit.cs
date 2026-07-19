@@ -197,11 +197,14 @@ public partial class Unit : Entity
         HasCharged = false;
         ActivationStatus = ActivationStatus.Waiting;
 
-        // PinnedDown ne dure qu'une activation : dissipé en début de tour suivant.
-        RemoveStatusEffect(StatusEffect.PinnedDown);
+        // PinnedDown se dissipe à la fin du tour SEULEMENT si l'unité n'est plus Démoralisée.
+        // Cela permet de garder les malus pendant l'activation même si le test de moral de début d'activation a été réussi.
+        if (!IsDemoralized())
+        {
+            RemoveStatusEffect(StatusEffect.PinnedDown);
+        }
         
-        // Note : Suppressed et OnFire survivent au changement de tour.
-        // Ils sont dissipés lors de l'activation de l'unité.
+        // Note : Routing et Demoralized survivent au changement de tour.
     }
 
 }

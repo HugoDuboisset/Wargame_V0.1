@@ -188,7 +188,72 @@ public class AssaultResolutionService
         return null;
     }
 
-    private int ResolveHits(MeleeAttack attack)
+    /// <summary>
+    /// Résout des attaques d'opportunité contre une unité cible (ex: lors d'une fuite).
+    /// Les attaques d'opportunité subissent un malus de -3 pour toucher.
+    /// Les pertes sont retirées immédiatement.
+    /// </summary>
+    public (int WoundsLost, int FiguresLost, bool BrutalTriggered) ResolveOpportunityAttacks(
+        List<Unit> attackers, Unit target)
+    {
+        int woundsLost = 0;
+        int figuresLost = 0;
+        bool brutalTriggered = false;
+
+        var allEngaged = attackers.ToList();
+        allEngaged.Add(target);
+
+        var allAttacks = GenerateAllAttacks(allEngaged);
+        // Ne garder que les attaques contre la cible
+        var oppAttacks = allAttacks.Where(a => a.TargetUnit.Id == target.Id && a.Attacker.IsAlive).ToList();
+
+        var damageToApply = new Dictionary<Figure, (int Damage, bool IsBrutal)>();
+
+        foreach (var attack in oppAttacks)
+        {
+            // Les attaques d'opportunité ont un malus de -3 (le seuil pour toucher augmente de 3)
+            int hitsScored = ResolveHits(attack, hitModifier: -3);
+            if (hitsScored > 0)
+            {
+                int wounds = ResolveWounds(attack, hitsScored);
+                if (wounds > 0)
+                {
+                    int damage = wounds * attack.Weapon.Profile.Damage;
+                    bool isBrutal = attack.Weapon.Profile.Traits.HasFlag(WeaponTrait.Brutal);
+                    
+                    if (!damageToApply.ContainsKey(attack.Target))
+                        damageToApply[attack.Target] = (0, false);
+                        
+                    var current = damageToApply[attack.Target];
+                    damageToApply[attack.Target] = (current.Damage + damage, current.IsBrutal || isBrutal);
+                }
+            }
+        }
+
+        // Appliquer les dégâts
+        foreach (var kvp in damageToApply)
+        {
+            var targetFigure = kvp.Key;
+            var damageInfo = kvp.Value;
+
+            int hpBefore = targetFigure.CurrentHitPoints;
+            bool killed = targetFigure.TakeDamage(damageInfo.Damage);
+            int hpLost = hpBefore - targetFigure.CurrentHitPoints;
+
+            woundsLost += hpLost;
+
+            if (killed)
+            {
+                figuresLost++;
+                if (damageInfo.IsBrutal)
+                    brutalTriggered = true;
+            }
+        }
+
+        return (woundsLost, figuresLost, brutalTriggered);
+    }
+
+    private int ResolveHits(MeleeAttack attack, int hitModifier = 0)
     {
         int a = attack.Weapon.Profile.Attacks;
         int attackerCombat = attack.AttackerUnit.BaseProfile.Combat;
@@ -200,6 +265,11 @@ public class AssaultResolutionService
         }
 
         int targetNumber = MeleeHitMatrix.GetTargetNumber(attackerCombat, defenderCombat);
+        
+        // Appliquer le modificateur (ex: -3 pour opportunité -> targetNumber + 3)
+        // Attention : on soustrait hitModifier au jet, ce qui revient à l'ajouter au TargetNumber
+        targetNumber -= hitModifier; 
+        
         int hits = 0;
 
         for (int i = 0; i < a; i++)

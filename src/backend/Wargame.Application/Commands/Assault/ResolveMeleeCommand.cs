@@ -30,13 +30,19 @@ public class ResolveMeleeCommandHandler : IRequestHandler<ResolveMeleeCommand, M
 {
     private readonly IGameMatchRepository _repository;
     private readonly AssaultResolutionService _resolutionService;
+    private readonly MoraleResolutionService _moraleService;
+    private readonly ActionResolutionService _actionService;
 
     public ResolveMeleeCommandHandler(
         IGameMatchRepository repository,
-        AssaultResolutionService resolutionService)
+        AssaultResolutionService resolutionService,
+        MoraleResolutionService moraleService,
+        ActionResolutionService actionService)
     {
         _repository = repository;
         _resolutionService = resolutionService;
+        _moraleService = moraleService;
+        _actionService = actionService;
     }
 
     public async Task<MeleeResultDto> Handle(ResolveMeleeCommand request, CancellationToken cancellationToken)
@@ -79,8 +85,6 @@ public class ResolveMeleeCommandHandler : IRequestHandler<ResolveMeleeCommand, M
         
         if (maxWoundsLost > 0)
         {
-            // Trouver l'unité qui a perdu maxWoundsLost. S'il y a égalité, pas de perdant (ou gérer autrement).
-            // Les règles disent : "L'unité ayant perdu le plus de PV au cours du combat est considérée comme perdante."
             var unitsWithMaxLosses = woundsLost.Where(kvp => kvp.Value == maxWoundsLost).ToList();
             if (unitsWithMaxLosses.Count == 1)
             {
@@ -88,11 +92,59 @@ public class ResolveMeleeCommandHandler : IRequestHandler<ResolveMeleeCommand, M
             }
         }
 
-        // 3. Gestion du désengagement si des unités ennemies sont mortes
-        foreach (var unit in engagedUnits)
+        bool moraleFailed = false;
+        bool riskyActionFailed = false;
+        int oppWounds = 0;
+        int oppFigures = 0;
+
+        // 3. Gestion du moral pour le perdant
+        if (loserId.HasValue)
         {
-            // Si toutes les figurines de TOUTES les unités ennemies avec lesquelles elle est engagée sont mortes
-            // (Ici on simplifie en vérifiant si toutes les unités de engagedUnits qui ne sont pas amies sont mortes)
+            var loserUnit = engagedUnits.FirstOrDefault(u => u.Id == loserId.Value && u.LifecycleStatus == UnitLifecycleStatus.Alive);
+            if (loserUnit != null)
+            {
+                bool isBrutal = brutalTriggered.ContainsKey(loserId.Value) && brutalTriggered[loserId.Value];
+                bool moralePassed = _moraleService.ResolveMeleeMoraleTest(loserUnit, isBrutal);
+                
+                if (!moralePassed)
+                {
+                    moraleFailed = true;
+
+                    // Test d'action risquée pour se désengager
+                    bool riskyActionPassed = _actionService.ResolveRiskyAction(loserUnit);
+                    if (!riskyActionPassed)
+                    {
+                        riskyActionFailed = true;
+                        
+                        // Attaques d'opportunité par les ennemis
+                        var enemies = engagedUnits.Where(u => u.Id != loserId.Value && u.LifecycleStatus == UnitLifecycleStatus.Alive).ToList();
+                        if (enemies.Any())
+                        {
+                            var (oW, oF, _) = _resolutionService.ResolveOpportunityAttacks(enemies, loserUnit);
+                            oppWounds = oW;
+                            oppFigures = oF;
+
+                            if (loserUnit.GetAliveCount() == 0)
+                            {
+                                loserUnit.Destroy();
+                            }
+                        }
+                    }
+
+                    // Forcer le désengagement
+                    var enemiesForLoser = engagedUnits.Where(u => u.Id != loserId.Value).ToList();
+                    foreach (var enemy in enemiesForLoser)
+                    {
+                        loserUnit.Disengage(enemy.Id);
+                        enemy.Disengage(loserUnit.Id);
+                    }
+                }
+            }
+        }
+
+        // 4. Gestion du désengagement naturel si des unités ennemies sont mortes
+        foreach (var unit in engagedUnits.Where(u => u.LifecycleStatus == UnitLifecycleStatus.Alive))
+        {
             var enemyUnits = engagedUnits.Where(u => u.Id != unit.Id).ToList();
             bool allEnemiesDead = enemyUnits.All(e => e.LifecycleStatus == UnitLifecycleStatus.Destroyed);
             
@@ -104,6 +156,6 @@ public class ResolveMeleeCommandHandler : IRequestHandler<ResolveMeleeCommand, M
 
         await _repository.SaveAsync(match, cancellationToken);
 
-        return new MeleeResultDto(woundsLost, figuresLost, brutalTriggered, loserId);
+        return new MeleeResultDto(woundsLost, figuresLost, brutalTriggered, loserId, moraleFailed, riskyActionFailed, oppWounds, oppFigures);
     }
 }

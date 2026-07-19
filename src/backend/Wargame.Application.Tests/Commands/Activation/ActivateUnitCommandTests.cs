@@ -4,6 +4,7 @@ using Wargame.Application.Commands.Activation;
 using Wargame.Application.Interfaces.Repositories;
 using Wargame.Domain.Entities;
 using Wargame.Domain.Enums;
+using Wargame.Domain.Services;
 using Wargame.Domain.ValueObjects;
 
 namespace Wargame.Application.Tests.Commands.Activation;
@@ -18,7 +19,10 @@ public class ActivateUnitCommandTests
     public ActivateUnitCommandTests()
     {
         _repositoryMock = new Mock<IGameMatchRepository>();
-        _handler = new ActivateUnitCommandHandler(_repositoryMock.Object);
+        var diceRollerMock = new Mock<IDiceRoller>();
+        diceRollerMock.Setup(d => d.RollD10()).Returns(1); // Succès garanti par défaut
+        var moraleService = new MoraleResolutionService(diceRollerMock.Object);
+        _handler = new ActivateUnitCommandHandler(_repositoryMock.Object, moraleService);
 
         // Configuration d'une partie simulée
         var player1 = new Player(Guid.NewGuid(), "Player 1");

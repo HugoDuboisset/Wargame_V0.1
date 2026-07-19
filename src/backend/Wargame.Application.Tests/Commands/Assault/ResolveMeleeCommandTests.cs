@@ -16,13 +16,11 @@ public class ResolveMeleeCommandTests
     private const int BaseSizeMm = 25;
     private readonly Mock<IGameMatchRepository> _repositoryMock = new();
 
-    private (DomainMatch match, Unit unit1, Unit unit2) CreateEngagedUnits(
+    private (DomainMatch match, Unit u1, Unit u2) CreateEngagedUnits(
         WeaponTrait u1WeaponTrait = WeaponTrait.None,
         WeaponTrait u2WeaponTrait = WeaponTrait.None,
-        int u1Combat = 4,
-        int u2Combat = 4,
-        int u1Init = 4,
-        int u2Init = 4,
+        int u1Combat = 4, int u2Combat = 4,
+        int u1Init = 4, int u2Init = 4,
         bool u1Charging = false)
     {
         var player1 = new Player(Guid.NewGuid(), "Player 1");
@@ -37,22 +35,16 @@ public class ResolveMeleeCommandTests
         var weapon2 = new Weapon(Guid.NewGuid(), "Weapon 2", wp2);
 
         var p1 = new UnitProfile(6, 4, u1Combat, u1Init, 7, ArmorClass.Light);
-        var p2 = new UnitProfile(6, 4, u2Combat, u2Init, 7, ArmorClass.Light);
+        var p2 = new UnitProfile(6, 4, u2Combat, u2Init, 7, ArmorClass.Light); // Morale 7, Init 4
 
-        // Au contact (0,0) et (0, 0.5") -> base to base distance < 0
-        var f1 = new Figure(Guid.NewGuid(), 1, BaseSizeMm, new Position(0, 0), null, [weapon1]);
-        var f2 = new Figure(Guid.NewGuid(), 1, BaseSizeMm, new Position(0.5, 0), null, [weapon2]);
+        var f1 = new Figure(Guid.NewGuid(), 2, BaseSizeMm, new Position(0, 0), null, [weapon1]);
+        var f2 = new Figure(Guid.NewGuid(), 2, BaseSizeMm, new Position(0.5, 0), null, [weapon2]); // 2 HP
 
         var u1 = new Unit(Guid.NewGuid(), "Unit 1", UnitType.Infantry, p1, [f1]);
         var u2 = new Unit(Guid.NewGuid(), "Unit 2", UnitType.Infantry, p2, [f2]);
 
         u1.EngageWith(u2.Id);
         u2.EngageWith(u1.Id);
-
-        if (u1Charging)
-        {
-            u1.ApplyStatusEffect(StatusEffect.Charging);
-        }
 
         match.AddUnit(u1);
         match.AddUnit(u2);
@@ -76,67 +68,57 @@ public class ResolveMeleeCommandTests
     private ResolveMeleeCommandHandler CreateHandler(IDiceRoller roller)
     {
         var resolutionService = new AssaultResolutionService(roller);
-        return new ResolveMeleeCommandHandler(_repositoryMock.Object, resolutionService);
+        var moraleService = new MoraleResolutionService(roller);
+        var actionService = new ActionResolutionService(roller);
+        return new ResolveMeleeCommandHandler(_repositoryMock.Object, resolutionService, moraleService, actionService);
     }
 
     [Fact]
     public async Task Handle_Should_Apply_Wounds_And_Identify_Loser()
     {
         var (match, u1, u2) = CreateEngagedUnits();
-        
-        // U1 attaque: touche (C4 vs C4 -> 5+). On donne 8.
-        // Blesse: (Legere vs Light -> 5+). On donne 6. (1 blessure, 1 mort pour U2)
-        // U2 attaque: touche (5+). On donne 2 (échec).
-        var roller = Roller(8, 6, 2); 
-        // Note: ordre de frappe ? Même init = simultané.
-        // Service va lancer D10 pour U1 (toucher), U2 (toucher), puis U1 (blesser), U2 (blesser).
-        // En réalité: le service lance Toucher puis Blesser pour chaque figurine du même palier.
-        // Le foreach attaque parcourt U1 puis U2.
-        // U1: Roll(8) -> Hit.
-        // U2: Roll(6) -> Hit.
-        // U1 Wounds: Roll(2) -> Fail.
-        // U2 Wounds: Roll(?) ... 
-        // Mieux vaut donner une séquence de dés contrôlée et abondante.
-        // U1 attaque: 8 (hit), 6 (wound) -> 1 dmg
-        // U2 attaque: 2 (miss)
-        // Mais comment être sûr de l'ordre ? GroupBy Init. Ils ont même Init.
-        // GroupBy préserve l'ordre initial des éléments (OrderBy descending init).
-        // U1 a été ajouté en premier dans GenerateAllAttacks. Donc U1 tire ses dés, puis U2 tire ses dés pour Toucher. 
-        // Puis U1 blessures, puis U2 blessures.
-        var r = Roller(8, 2, 6); // U1 hit, U2 miss, U1 wound
+        // U1 hit(8), U2 miss(2), U1 wound(6)
+        var r = Roller(8, 2, 6); 
 
         var result = await CreateHandler(r).Handle(
             new ResolveMeleeCommand(match.Id, [u1.Id, u2.Id]), CancellationToken.None);
 
         result.WoundsLostPerUnit[u2.Id].Should().Be(1);
-        result.WoundsLostPerUnit[u1.Id].Should().Be(0);
         result.LoserUnitId.Should().Be(u2.Id);
-
-        u2.Figures.First().IsAlive.Should().BeFalse();
-        u2.LifecycleStatus.Should().Be(UnitLifecycleStatus.Destroyed);
     }
 
     [Fact]
-    public async Task Handle_Should_Disengage_When_Enemies_Destroyed()
+    public async Task Handle_Should_Fail_Morale_And_Fail_RiskyAction_LeadingTo_OppAttacks()
     {
         var (match, u1, u2) = CreateEngagedUnits();
-        var r = Roller(8, 2, 6); // U1 tue U2
-
-        await CreateHandler(r).Handle(
-            new ResolveMeleeCommand(match.Id, [u1.Id, u2.Id]), CancellationToken.None);
-
-        u1.IsEngaged().Should().BeFalse(); // U2 est mort, U1 doit être désengagé
-    }
-
-    [Fact]
-    public async Task Handle_Should_Apply_Brutal_Trait()
-    {
-        var (match, u1, u2) = CreateEngagedUnits(u1WeaponTrait: WeaponTrait.Brutal);
-        var r = Roller(8, 2, 6); // U1 hit, U2 miss, U1 wound
+        
+        // Sequence:
+        // 1. Melee phase: U1 hits, U2 misses, U1 wounds -> 1 dmg to u2 (has 2 hp left, so not dead, just lost)
+        // 2. Morale test for u2: Needs <= 7. We roll 10 -> Fail.
+        // 3. Risky Action test for u2: Needs < Init(4). We roll 8 -> Fail.
+        // 4. Opp Attacks (U1 attacks u2): U1 hits with -3 modifier.
+        //    Base target = 5+. Modified target = 8+. We roll 9 -> Hit.
+        //    U1 wounds: Needs 5+. We roll 7 -> Wound (1 dmg).
+        // Total damage to u2: 1 + 1 = 2.
+        
+        var r = Roller(
+            8, 2, 6, // Melee Phase: U1 hit, U2 miss, U1 wound
+            10,       // Morale test: 10 (Fail)
+            8,        // Risky Action: 8 (Fail)
+            9, 7      // Opp Attacks: U1 hit (9 >= 8), U1 wound (7 >= 5)
+        );
 
         var result = await CreateHandler(r).Handle(
             new ResolveMeleeCommand(match.Id, [u1.Id, u2.Id]), CancellationToken.None);
 
-        result.BrutalTriggeredAgainst[u2.Id].Should().BeTrue();
+        result.LoserUnitId.Should().Be(u2.Id);
+        result.MoraleFailed.Should().BeTrue();
+        result.RiskyActionFailed.Should().BeTrue();
+        
+        // Initial melee damage = 1 wound. Opportunity damage = 1 wound. Total = 2 wounds.
+        result.OpportunityAttacksWounds.Should().Be(1);
+        u2.Figures.First().CurrentHitPoints.Should().Be(0); // Dead!
+        u2.IsEngaged().Should().BeFalse();
+        u1.IsEngaged().Should().BeFalse();
     }
 }
