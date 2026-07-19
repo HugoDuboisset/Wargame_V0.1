@@ -4,6 +4,7 @@ using Wargame.Domain.Entities;
 using Wargame.Domain.Enums;
 using Wargame.Domain.Services;
 using Wargame.Domain.ValueObjects;
+using Wargame.Domain.ValueObjects.Geometry;
 
 namespace Wargame.Domain.Tests.Services;
 
@@ -92,8 +93,8 @@ public class ShootingResolutionServiceTests
 
         // Terrain sur la cible (Occupation). Cover Heavy (-3).
         // CT 4. Jet de 6 - 3 = 3 (Echec). Jet de 7 - 3 = 4 (Touche).
-        var terrain = new Terrain(Guid.NewGuid(), "Ruines", targetUnit.Figures[0].Position,
-            100, 100, 0, TerrainGeometry.Occupation, CoverLevel.Heavy);
+        var shape = new Rectangle(targetUnit.Figures[0].Position, 100 / 25.4, 100 / 25.4, 0);
+        var terrain = new Terrain(Guid.NewGuid(), "Ruines", shape, TerrainGeometry.Occupation, CoverLevel.Heavy);
 
         var hits1 = service.ResolveShot(shooter, shootingUnit, targetUnit, weapon, [terrain]);
         hits1.Should().BeEmpty();
@@ -110,8 +111,8 @@ public class ShootingResolutionServiceTests
         var (shooter, shootingUnit, targetUnit, weapon) = SetupScenario(
             shootingSkill: 4, traits: WeaponTrait.IgnoreCover);
 
-        var terrain = new Terrain(Guid.NewGuid(), "Ruines", targetUnit.Figures[0].Position,
-            100, 100, 0, TerrainGeometry.Occupation, CoverLevel.Heavy);
+        var shape = new Rectangle(targetUnit.Figures[0].Position, 100 / 25.4, 100 / 25.4, 0);
+        var terrain = new Terrain(Guid.NewGuid(), "Ruines", shape, TerrainGeometry.Occupation, CoverLevel.Heavy);
 
         var hits = service.ResolveShot(shooter, shootingUnit, targetUnit, weapon, [terrain]); // CT 4, Jet 4 = Touche, même dans Cover Heavy grâce au trait
 

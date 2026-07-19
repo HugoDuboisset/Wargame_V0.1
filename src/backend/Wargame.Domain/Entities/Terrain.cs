@@ -1,6 +1,7 @@
 using Wargame.Domain.Enums;
 using Wargame.Domain.Primitives;
 using Wargame.Domain.ValueObjects;
+using Wargame.Domain.ValueObjects.Geometry;
 
 namespace Wargame.Domain.Entities;
 
@@ -13,23 +14,17 @@ public class Terrain : Entity
 {
     public string Name { get; private set; }
 
-    /// <summary>Position du terrain sur la table (en pouces).</summary>
-    public Position Position { get; private set; }
+    /// <summary>
+    /// Forme géométrique du terrain (cercle, rectangle, etc.) définissant son emprise spatiale.
+    /// Contient sa propre notion de position (centre).
+    /// </summary>
+    public IShape Shape { get; private set; }
 
     /// <summary>
     /// Type(s) géométrique(s) du terrain (Flags cumulables).
     /// Ex: TerrainGeometry.Occupation | TerrainGeometry.Interference pour une forêt dense.
     /// </summary>
     public TerrainGeometry Geometry { get; private set; }
-
-    /// <summary>Largeur du terrain (axe X local) en millimètres.</summary>
-    public int WidthMm { get; private set; }
-
-    /// <summary>Longueur/Profondeur du terrain (axe Y local) en millimètres.</summary>
-    public int LengthMm { get; private set; }
-
-    /// <summary>Angle de rotation en degrés (0-359), dans le sens horaire par rapport au nord.</summary>
-    public int RotationDegrees { get; private set; }
 
     /// <summary>Niveau de protection offert par ce terrain.</summary>
     public CoverLevel CoverLevel { get; private set; }
@@ -51,15 +46,10 @@ public class Terrain : Entity
     /// <summary>True si ce terrain bloque totalement les lignes de vue.</summary>
     public bool IsOpaque => Geometry.HasFlag(TerrainGeometry.Opaque);
 
-    public Terrain(Guid id, string name, Position position,
-                   int widthMm, int lengthMm, int rotationDegrees,
-                   TerrainGeometry geometry, CoverLevel coverLevel) : base(id)
+    public Terrain(Guid id, string name, IShape shape, TerrainGeometry geometry, CoverLevel coverLevel) : base(id)
     {
         Name = name;
-        Position = position;
-        WidthMm = widthMm;
-        LengthMm = lengthMm;
-        RotationDegrees = rotationDegrees;
+        Shape = shape ?? throw new ArgumentNullException(nameof(shape));
         Geometry = geometry;
         CoverLevel = coverLevel;
     }
