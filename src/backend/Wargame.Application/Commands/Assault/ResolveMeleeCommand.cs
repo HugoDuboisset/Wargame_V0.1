@@ -31,18 +31,15 @@ public class ResolveMeleeCommandHandler : IRequestHandler<ResolveMeleeCommand, M
     private readonly IGameMatchRepository _repository;
     private readonly AssaultResolutionService _resolutionService;
     private readonly MoraleResolutionService _moraleService;
-    private readonly ActionResolutionService _actionService;
 
     public ResolveMeleeCommandHandler(
         IGameMatchRepository repository,
         AssaultResolutionService resolutionService,
-        MoraleResolutionService moraleService,
-        ActionResolutionService actionService)
+        MoraleResolutionService moraleService)
     {
         _repository = repository;
         _resolutionService = resolutionService;
         _moraleService = moraleService;
-        _actionService = actionService;
     }
 
     public async Task<MeleeResultDto> Handle(ResolveMeleeCommand request, CancellationToken cancellationToken)
@@ -93,9 +90,6 @@ public class ResolveMeleeCommandHandler : IRequestHandler<ResolveMeleeCommand, M
         }
 
         bool moraleFailed = false;
-        bool riskyActionFailed = false;
-        int oppWounds = 0;
-        int oppFigures = 0;
 
         // 3. Gestion du moral pour le perdant
         if (loserId.HasValue)
@@ -109,35 +103,9 @@ public class ResolveMeleeCommandHandler : IRequestHandler<ResolveMeleeCommand, M
                 if (!moralePassed)
                 {
                     moraleFailed = true;
-
-                    // Test d'action risquée pour se désengager
-                    bool riskyActionPassed = _actionService.ResolveRiskyAction(loserUnit);
-                    if (!riskyActionPassed)
-                    {
-                        riskyActionFailed = true;
-                        
-                        // Attaques d'opportunité par les ennemis
-                        var enemies = engagedUnits.Where(u => u.Id != loserId.Value && u.LifecycleStatus == UnitLifecycleStatus.Alive).ToList();
-                        if (enemies.Any())
-                        {
-                            var (oW, oF, _) = _resolutionService.ResolveOpportunityAttacks(enemies, loserUnit);
-                            oppWounds = oW;
-                            oppFigures = oF;
-
-                            if (loserUnit.GetAliveCount() == 0)
-                            {
-                                loserUnit.Destroy();
-                            }
-                        }
-                    }
-
-                    // Forcer le désengagement
-                    var enemiesForLoser = engagedUnits.Where(u => u.Id != loserId.Value).ToList();
-                    foreach (var enemy in enemiesForLoser)
-                    {
-                        loserUnit.Disengage(enemy.Id);
-                        enemy.Disengage(loserUnit.Id);
-                    }
+                    // L'unité gagne les statuts Routing et Demoralized via le service.
+                    // Elle reste Engagée pour le moment. Le désengagement et les éventuelles attaques d'opportunité
+                    // seront résolus lors de la commande de mouvement de Flee/Désengagement physique.
                 }
             }
         }
@@ -156,6 +124,6 @@ public class ResolveMeleeCommandHandler : IRequestHandler<ResolveMeleeCommand, M
 
         await _repository.SaveAsync(match, cancellationToken);
 
-        return new MeleeResultDto(woundsLost, figuresLost, brutalTriggered, loserId, moraleFailed, riskyActionFailed, oppWounds, oppFigures);
+        return new MeleeResultDto(woundsLost, figuresLost, brutalTriggered, loserId, moraleFailed);
     }
 }

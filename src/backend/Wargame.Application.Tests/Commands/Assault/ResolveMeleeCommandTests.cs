@@ -69,8 +69,7 @@ public class ResolveMeleeCommandTests
     {
         var resolutionService = new AssaultResolutionService(roller);
         var moraleService = new MoraleResolutionService(roller);
-        var actionService = new ActionResolutionService(roller);
-        return new ResolveMeleeCommandHandler(_repositoryMock.Object, resolutionService, moraleService, actionService);
+        return new ResolveMeleeCommandHandler(_repositoryMock.Object, resolutionService, moraleService);
     }
 
     [Fact]
@@ -88,24 +87,17 @@ public class ResolveMeleeCommandTests
     }
 
     [Fact]
-    public async Task Handle_Should_Fail_Morale_And_Fail_RiskyAction_LeadingTo_OppAttacks()
+    public async Task Handle_Should_Fail_Morale_And_Gain_Routing_Status()
     {
         var (match, u1, u2) = CreateEngagedUnits();
         
         // Sequence:
-        // 1. Melee phase: U1 hits, U2 misses, U1 wounds -> 1 dmg to u2 (has 2 hp left, so not dead, just lost)
+        // 1. Melee phase: U1 hits, U2 misses, U1 wounds -> 1 dmg to u2
         // 2. Morale test for u2: Needs <= 7. We roll 10 -> Fail.
-        // 3. Risky Action test for u2: Needs < Init(4). We roll 8 -> Fail.
-        // 4. Opp Attacks (U1 attacks u2): U1 hits with -3 modifier.
-        //    Base target = 5+. Modified target = 8+. We roll 9 -> Hit.
-        //    U1 wounds: Needs 5+. We roll 7 -> Wound (1 dmg).
-        // Total damage to u2: 1 + 1 = 2.
         
         var r = Roller(
             8, 2, 6, // Melee Phase: U1 hit, U2 miss, U1 wound
-            10,       // Morale test: 10 (Fail)
-            8,        // Risky Action: 8 (Fail)
-            9, 7      // Opp Attacks: U1 hit (9 >= 8), U1 wound (7 >= 5)
+            10       // Morale test: 10 (Fail)
         );
 
         var result = await CreateHandler(r).Handle(
@@ -113,12 +105,9 @@ public class ResolveMeleeCommandTests
 
         result.LoserUnitId.Should().Be(u2.Id);
         result.MoraleFailed.Should().BeTrue();
-        result.RiskyActionFailed.Should().BeTrue();
         
-        // Initial melee damage = 1 wound. Opportunity damage = 1 wound. Total = 2 wounds.
-        result.OpportunityAttacksWounds.Should().Be(1);
-        u2.Figures.First().CurrentHitPoints.Should().Be(0); // Dead!
-        u2.IsEngaged().Should().BeFalse();
-        u1.IsEngaged().Should().BeFalse();
+        u2.IsDemoralized().Should().BeTrue();
+        u2.ActiveStatusEffects.HasFlag(StatusEffect.Routing).Should().BeTrue();
+        u2.IsEngaged().Should().BeTrue(); // They stay engaged until the physical disengage movement
     }
 }
