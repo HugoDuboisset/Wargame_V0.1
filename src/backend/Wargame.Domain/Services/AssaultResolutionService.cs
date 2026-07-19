@@ -38,13 +38,13 @@ public class AssaultResolutionService
     /// </summary>
     /// <returns>Dictionnaire des dégâts subis par unité, et un flag BrutalTriggered</returns>
     public (Dictionary<Guid, int> WoundsLostPerUnit, Dictionary<Guid, int> FiguresLostPerUnit, Dictionary<Guid, bool> BrutalTriggeredAgainst) ResolveMelee(
-        List<Unit> engagedUnits)
+        List<Unit> engagedUnits, List<Terrain> boardTerrains)
     {
         var woundsLost = engagedUnits.ToDictionary(u => u.Id, u => 0);
         var figuresLost = engagedUnits.ToDictionary(u => u.Id, u => 0);
         var brutalTriggered = engagedUnits.ToDictionary(u => u.Id, u => false);
 
-        var allAttacks = GenerateAllAttacks(engagedUnits);
+        var allAttacks = GenerateAllAttacks(engagedUnits, boardTerrains);
 
         // Grouper les attaques par Initiative effective (décroissante)
         var attacksByInit = allAttacks
@@ -126,14 +126,17 @@ public class AssaultResolutionService
         return (woundsLost, figuresLost, brutalTriggered);
     }
 
-    private List<MeleeAttack> GenerateAllAttacks(List<Unit> engagedUnits)
+    private List<MeleeAttack> GenerateAllAttacks(List<Unit> engagedUnits, List<Terrain> boardTerrains)
     {
         var attacks = new List<MeleeAttack>();
+        bool isFirstRoundOfCombat = engagedUnits.Any(u => u.ActiveStatusEffects.HasFlag(StatusEffect.Charging));
 
         foreach (var attackerUnit in engagedUnits)
         {
             var enemyUnits = engagedUnits.Where(u => u.Id != attackerUnit.Id).ToList();
             if (!enemyUnits.Any()) continue;
+
+            bool isDefender = !attackerUnit.ActiveStatusEffects.HasFlag(StatusEffect.Charging);
 
             foreach (var attackerFig in attackerUnit.Figures.Where(f => f.IsAlive))
             {
@@ -151,8 +154,18 @@ public class AssaultResolutionService
                 if (weapon.Profile.Traits.HasFlag(WeaponTrait.Unbalancing))
                     effectiveInit -= 2;
                 
-                // Note : le bonus d'initiative lié au terrain du défenseur n'est pas encore géré à l'échelle de la figurine
-                
+                // Bonus de terrain pour le défenseur au premier round de combat
+                if (isFirstRoundOfCombat && isDefender)
+                {
+                    var occupiedTerrain = boardTerrains.FirstOrDefault(t => 
+                        t.Geometry.HasFlag(TerrainGeometry.Occupation) && t.Shape.Contains(attackerFig.Position));
+                    
+                    if (occupiedTerrain != null)
+                    {
+                        effectiveInit += occupiedTerrain.AssaultInitiativeBonus;
+                    }
+                }
+
                 attacks.Add(new MeleeAttack
                 {
                     Attacker = attackerFig,
@@ -203,7 +216,7 @@ public class AssaultResolutionService
         var allEngaged = attackers.ToList();
         allEngaged.Add(target);
 
-        var allAttacks = GenerateAllAttacks(allEngaged);
+        var allAttacks = GenerateAllAttacks(allEngaged, []);
         // Ne garder que les attaques contre la cible
         var oppAttacks = allAttacks.Where(a => a.TargetUnit.Id == target.Id && a.Attacker.IsAlive).ToList();
 

@@ -126,21 +126,19 @@ public class ShootingResolutionService
         }
 
         // Couvert de la cible
-        // On prend le meilleur niveau de couvert parmi les figurines cibles vivantes
+        // On prend le meilleur niveau de couvert (plus grosse pénalité)
         if (!weapon.HasTrait(WeaponTrait.IgnoreCover))
         {
             int maxCoverPenalty = 0;
             var targetFigures = targetUnit.Figures.Where(f => f.IsAlive).ToList();
             
-            // Unité dans un terrain Geometry.Occupation
+            // Unité dans un terrain Geometry.Occupation (Règle des 50%)
             var occupationTerrains = boardTerrains.Where(t => t.Geometry.HasFlag(TerrainGeometry.Occupation)).ToList();
             foreach (var terrain in occupationTerrains)
             {
-                // Si la cible est dans le terrain (simplifié : on vérifie l'intersection)
-                // Ici on applique la pénalité si au moins une figurine est dans le terrain.
-                bool targetInTerrain = targetFigures.Any(f => 
-                    LineOfSightService.Intersects(f.Position, f.Position, terrain)
-                );
+                // Le terrain offre le couvert si au moins 50% des figurines vivantes sont dedans
+                int figuresInTerrain = targetFigures.Count(f => terrain.Shape.Contains(f.Position));
+                bool targetInTerrain = figuresInTerrain >= Math.Ceiling(targetFigures.Count / 2.0);
                 
                 if (targetInTerrain && terrain.CoverPenalty < maxCoverPenalty)
                 {
@@ -148,8 +146,19 @@ public class ShootingResolutionService
                 }
             }
 
-            // TODO: Couvert d'Interférence si la ligne de vue traverse un terrain Interference
-            
+            // Couvert par Geometry.Interference
+            // Le terrain offre un couvert si la ligne de vue du tireur vers l'une des cibles VIVANTES traverse le terrain
+            var interferenceTerrains = boardTerrains.Where(t => t.Geometry.HasFlag(TerrainGeometry.Interference)).ToList();
+            foreach (var terrain in interferenceTerrains)
+            {
+                bool lineOfSightCrosses = targetFigures.Any(f => terrain.Shape.Intersects(shooter.Position, f.Position));
+                
+                if (lineOfSightCrosses && terrain.CoverPenalty < maxCoverPenalty)
+                {
+                    maxCoverPenalty = terrain.CoverPenalty;
+                }
+            }
+
             modifier += maxCoverPenalty; // maxCoverPenalty est négatif
         }
 

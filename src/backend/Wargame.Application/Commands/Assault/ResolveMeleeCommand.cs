@@ -64,8 +64,10 @@ public class ResolveMeleeCommandHandler : IRequestHandler<ResolveMeleeCommand, M
                 throw new InvalidOperationException($"L'unité {unit.Id} n'est pas engagée au corps à corps.");
         }
 
+        var boardTerrains = match.Board.Terrains.ToList();
+
         // 1. Résolution des combats
-        var (woundsLost, figuresLost, brutalTriggered) = _resolutionService.ResolveMelee(engagedUnits);
+        var (woundsLost, figuresLost, brutalTriggered) = _resolutionService.ResolveMelee(engagedUnits, boardTerrains);
 
         // Destruction des unités mortes
         foreach (var unit in engagedUnits)
