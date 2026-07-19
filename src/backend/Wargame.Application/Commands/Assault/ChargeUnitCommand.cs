@@ -11,7 +11,8 @@ namespace Wargame.Application.Commands.Assault;
 /// <summary>
 /// Commande pour déclarer une charge (Phase d'Assaut).
 /// L'unité lance 1D6 + Mouvement. Si la distance permet d'atteindre le contact
-/// socle-à-socle, la charge réussit. Sinon, l'unité ne se déplace pas.
+/// socle-à-socle, la charge réussit. Les figurines se déplacent figurine par figurine,
+/// sans superposition. La consolidation (2") est une action séparée.
 /// </summary>
 public record ChargeUnitCommand(
     Guid GameMatchId,
@@ -33,15 +34,18 @@ public class ChargeUnitCommandHandler : IRequestHandler<ChargeUnitCommand, Charg
 {
     private readonly IGameMatchRepository _repository;
     private readonly AssaultValidationService _validationService;
+    private readonly AssaultMovementService _movementService;
     private readonly IDiceRoller _diceRoller;
 
     public ChargeUnitCommandHandler(
         IGameMatchRepository repository,
         AssaultValidationService validationService,
+        AssaultMovementService movementService,
         IDiceRoller diceRoller)
     {
         _repository = repository;
         _validationService = validationService;
+        _movementService = movementService;
         _diceRoller = diceRoller;
     }
 
@@ -86,8 +90,12 @@ public class ChargeUnitCommandHandler : IRequestHandler<ChargeUnitCommand, Charg
             );
         }
 
-        // 3. Charge réussie : déplacement des figurines
-        MoveFiguresTowardTarget(chargingUnit, targetUnit, chargeDistance);
+        // 3. Charge réussie : déplacement figurine par figurine (sans superposition)
+        var positions = _movementService.CalculateChargePositions(
+            chargingUnit.Figures, targetUnit.Figures, chargeDistance);
+
+        foreach (var (figure, newPosition) in positions)
+            figure.MoveTo(newPosition);
 
         // 4. Engagement mutuel
         chargingUnit.EngageWith(targetUnit.Id);
@@ -106,11 +114,10 @@ public class ChargeUnitCommandHandler : IRequestHandler<ChargeUnitCommand, Charg
         );
     }
 
-    /// <summary>
-    /// Vérifie si au moins une figurine de l'unité chargeante peut atteindre le contact
-    /// socle-à-socle avec au moins une figurine de l'unité cible, en se déplaçant de chargeDistance.
-    /// </summary>
-    private static bool CanReachContact(Wargame.Domain.Entities.Unit chargingUnit, Wargame.Domain.Entities.Unit targetUnit, double chargeDistance)
+    private static bool CanReachContact(
+        Wargame.Domain.Entities.Unit chargingUnit,
+        Wargame.Domain.Entities.Unit targetUnit,
+        double chargeDistance)
     {
         var aliveFigures = chargingUnit.Figures.Where(f => f.IsAlive).ToList();
         var aliveTargets = targetUnit.Figures.Where(f => f.IsAlive).ToList();
@@ -120,45 +127,5 @@ public class ChargeUnitCommandHandler : IRequestHandler<ChargeUnitCommand, Charg
                 attacker.GetEdgeDistanceTo(target) <= chargeDistance
             )
         );
-    }
-
-    /// <summary>
-    /// Déplace toutes les figurines de l'unité chargeante vers la cible, dans la limite de chargeDistance.
-    /// Chaque figurine se déplace au maximum de chargeDistance, en visant la figurine cible la plus proche.
-    /// Note : la consolidation (2" supplémentaire pour maximiser les contacts) est simplifiée ici.
-    /// </summary>
-    private static void MoveFiguresTowardTarget(Wargame.Domain.Entities.Unit chargingUnit, Wargame.Domain.Entities.Unit targetUnit, double chargeDistance)
-    {
-        var aliveTargets = targetUnit.Figures.Where(f => f.IsAlive).ToList();
-
-        foreach (var attacker in chargingUnit.Figures.Where(f => f.IsAlive))
-        {
-            // Trouver la figurine cible la plus proche
-            var closestTarget = aliveTargets
-                .OrderBy(t => attacker.GetEdgeDistanceTo(t))
-                .FirstOrDefault();
-
-            if (closestTarget == null) continue;
-
-            double distance = attacker.GetEdgeDistanceTo(closestTarget);
-            if (distance > chargeDistance) continue;
-
-            // Calculer la nouvelle position : se rapprocher le plus possible dans la direction de la cible
-            double dx = closestTarget.Position.X - attacker.Position.X;
-            double dy = closestTarget.Position.Y - attacker.Position.Y;
-            double totalDist = Math.Sqrt(dx * dx + dy * dy);
-
-            if (totalDist <= 0) continue;
-
-            // Déplacement = distance vers le contact (bord à bord), capped par chargeDistance
-            // On ne dépasse pas le point de contact (socle-à-socle)
-            double moveAmount = Math.Min(distance, chargeDistance);
-            double ratio = moveAmount / totalDist;
-
-            double newX = attacker.Position.X + dx * ratio;
-            double newY = attacker.Position.Y + dy * ratio;
-
-            attacker.MoveTo(new Domain.ValueObjects.Position(newX, newY));
-        }
     }
 }

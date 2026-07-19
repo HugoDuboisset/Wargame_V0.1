@@ -41,6 +41,7 @@ public static class DependencyInjection
         services.AddTransient<Wargame.Domain.Services.DamageResolutionService>();
         services.AddTransient<Wargame.Domain.Services.MoraleResolutionService>();
         services.AddTransient<Wargame.Domain.Services.AssaultValidationService>();
+        services.AddTransient<Wargame.Domain.Services.AssaultMovementService>();
 
         return services;
     }

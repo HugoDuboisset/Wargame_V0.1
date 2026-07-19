@@ -54,6 +54,7 @@ public class ChargeUnitCommandTests
         return new ChargeUnitCommandHandler(
             _repositoryMock.Object,
             new AssaultValidationService(),
+            new AssaultMovementService(),
             diceRoller);
     }
 
