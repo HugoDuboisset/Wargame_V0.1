@@ -9,6 +9,7 @@ public record TargetShootingResultDto(
     int Hits,
     int Wounds,
     int FiguresDestroyed,
+    int CohesionFiguresDestroyed,
     bool MoraleTestTriggered,
     bool MoraleTestPassed,
     bool TargetPinnedDown
@@ -18,5 +19,6 @@ public record ShootingResultDto(
     int TotalHits,
     int TotalWounds,
     int FiguresDestroyed,
+    int TotalCohesionFiguresDestroyed,
     List<TargetShootingResultDto> TargetResults
 );

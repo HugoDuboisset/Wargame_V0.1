@@ -69,7 +69,7 @@ public class ResolveMeleeCommandTests
     {
         var resolutionService = new AssaultResolutionService(roller);
         var moraleService = new MoraleResolutionService(roller);
-        return new ResolveMeleeCommandHandler(_repositoryMock.Object, resolutionService, moraleService);
+        return new ResolveMeleeCommandHandler(_repositoryMock.Object, resolutionService, moraleService, new Wargame.Domain.Services.UnitCohesionService());
     }
 
     [Fact]

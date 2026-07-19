@@ -33,13 +33,16 @@ public class DisengageUnitCommandHandler : IRequestHandler<DisengageUnitCommand,
 {
     private readonly IGameMatchRepository _repository;
     private readonly WithdrawalResolutionService _withdrawalResolutionService;
+    private readonly UnitCohesionService _cohesionService;
 
     public DisengageUnitCommandHandler(
         IGameMatchRepository repository,
-        WithdrawalResolutionService withdrawalResolutionService)
+        WithdrawalResolutionService withdrawalResolutionService,
+        UnitCohesionService cohesionService)
     {
         _repository = repository;
         _withdrawalResolutionService = withdrawalResolutionService;
+        _cohesionService = cohesionService;
     }
 
     public async Task<DisengageResultDto> Handle(DisengageUnitCommand request, CancellationToken cancellationToken)
@@ -79,6 +82,11 @@ public class DisengageUnitCommandHandler : IRequestHandler<DisengageUnitCommand,
 
             figureMoves.Add(new FigureMove(dto.FigureId, newPos));
         }
+
+        // Validation de la cohésion avant de subir les éventuelles attaques d'opportunité
+        var cohesionErrors = unit.ValidateCohesion(figureMoves, _cohesionService);
+        if (cohesionErrors.Any())
+            throw new InvalidOperationException($"Le désengagement brise la cohésion de l'unité : {string.Join(" | ", cohesionErrors)}");
 
         // 2. Test d'action risquée et attaques d'opportunité via le Domain Service
         var withdrawalResult = _withdrawalResolutionService.ResolveWithdrawal(unit, match);

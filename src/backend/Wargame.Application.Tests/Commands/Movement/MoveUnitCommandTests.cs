@@ -61,7 +61,7 @@ public class MoveUnitCommandTests
             new FigureMoveDto(fig.Id, 3, 0) // déplacement de 3" (bord à bord : 3" - rayon = ok)
         ]);
 
-        var handler = new MoveUnitCommandHandler(_repositoryMock.Object);
+        var handler = new MoveUnitCommandHandler(_repositoryMock.Object, new Wargame.Domain.Services.UnitCohesionService());
         await handler.Handle(command, CancellationToken.None);
 
         unit.MovementThisTurn.Should().Be(MovementType.Normal);
@@ -80,7 +80,7 @@ public class MoveUnitCommandTests
             new FigureMoveDto(unit.Figures[1].Id, 10.5, 0) // 0.5" de centre à centre (~bord à bord ok pour 25mm)
         ]);
 
-        var handler = new MoveUnitCommandHandler(_repositoryMock.Object);
+        var handler = new MoveUnitCommandHandler(_repositoryMock.Object, new Wargame.Domain.Services.UnitCohesionService());
         await handler.Handle(command, CancellationToken.None);
 
         unit.MovementThisTurn.Should().Be(MovementType.Sprint);
@@ -95,7 +95,7 @@ public class MoveUnitCommandTests
             new FigureMoveDto(unit.Figures[0].Id, 3, 0)
         ]);
 
-        var handler = new MoveUnitCommandHandler(_repositoryMock.Object);
+        var handler = new MoveUnitCommandHandler(_repositoryMock.Object, new Wargame.Domain.Services.UnitCohesionService());
         Func<Task> act = () => handler.Handle(command, CancellationToken.None);
 
         await act.Should().ThrowAsync<InvalidOperationException>()
@@ -111,7 +111,7 @@ public class MoveUnitCommandTests
             new FigureMoveDto(unit.Figures[0].Id, 3, 0)
         ]);
 
-        var handler = new MoveUnitCommandHandler(_repositoryMock.Object);
+        var handler = new MoveUnitCommandHandler(_repositoryMock.Object, new Wargame.Domain.Services.UnitCohesionService());
         Func<Task> act = () => handler.Handle(command, CancellationToken.None);
 
         await act.Should().ThrowAsync<InvalidOperationException>()
@@ -130,7 +130,7 @@ public class MoveUnitCommandTests
             new FigureMoveDto(fig.Id, 10, 0)
         ]);
 
-        var handler = new MoveUnitCommandHandler(_repositoryMock.Object);
+        var handler = new MoveUnitCommandHandler(_repositoryMock.Object, new Wargame.Domain.Services.UnitCohesionService());
         Func<Task> act = () => handler.Handle(command, CancellationToken.None);
 
         await act.Should().ThrowAsync<InvalidOperationException>()
@@ -148,7 +148,7 @@ public class MoveUnitCommandTests
             new FigureMoveDto(unit.Figures[0].Id, 20, 0)
         ]);
 
-        var handler = new MoveUnitCommandHandler(_repositoryMock.Object);
+        var handler = new MoveUnitCommandHandler(_repositoryMock.Object, new Wargame.Domain.Services.UnitCohesionService());
         Func<Task> act = () => handler.Handle(command, CancellationToken.None);
 
         await act.Should().ThrowAsync<InvalidOperationException>()
@@ -173,7 +173,7 @@ public class MoveUnitCommandTests
             new FigureMoveDto(unit.Figures[0].Id, 4, 0)
         ]);
 
-        var handler = new MoveUnitCommandHandler(_repositoryMock.Object);
+        var handler = new MoveUnitCommandHandler(_repositoryMock.Object, new Wargame.Domain.Services.UnitCohesionService());
         Func<Task> act = () => handler.Handle(command, CancellationToken.None);
 
         await act.Should().ThrowAsync<InvalidOperationException>()

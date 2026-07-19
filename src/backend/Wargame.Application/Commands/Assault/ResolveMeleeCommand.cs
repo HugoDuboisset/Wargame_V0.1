@@ -31,15 +31,18 @@ public class ResolveMeleeCommandHandler : IRequestHandler<ResolveMeleeCommand, M
     private readonly IGameMatchRepository _repository;
     private readonly AssaultResolutionService _resolutionService;
     private readonly MoraleResolutionService _moraleService;
+    private readonly UnitCohesionService _cohesionService;
 
     public ResolveMeleeCommandHandler(
         IGameMatchRepository repository,
         AssaultResolutionService resolutionService,
-        MoraleResolutionService moraleService)
+        MoraleResolutionService moraleService,
+        UnitCohesionService cohesionService)
     {
         _repository = repository;
         _resolutionService = resolutionService;
         _moraleService = moraleService;
+        _cohesionService = cohesionService;
     }
 
     public async Task<MeleeResultDto> Handle(ResolveMeleeCommand request, CancellationToken cancellationToken)
@@ -69,12 +72,23 @@ public class ResolveMeleeCommandHandler : IRequestHandler<ResolveMeleeCommand, M
         // 1. Résolution des combats
         var (woundsLost, figuresLost, brutalTriggered) = _resolutionService.ResolveMelee(engagedUnits, boardTerrains);
 
-        // Destruction des unités mortes
+        // Destruction des unités mortes et résolution de la perte de cohésion
+        var cohesionLostPerUnit = new Dictionary<Guid, int>();
         foreach (var unit in engagedUnits)
         {
             if (unit.GetAliveCount() == 0 && unit.LifecycleStatus == UnitLifecycleStatus.Alive)
             {
                 unit.Destroy();
+            }
+            else if (unit.LifecycleStatus == UnitLifecycleStatus.Alive)
+            {
+                var (movedFigures, destroyedByCohesion) = _cohesionService.ResolveCohesionLoss(unit);
+                if (destroyedByCohesion.Count > 0)
+                {
+                    cohesionLostPerUnit[unit.Id] = destroyedByCohesion.Count;
+                    // Note : Ces morts par cohésion ne comptent pas dans maxWoundsLost pour déterminer le perdant.
+                    // Si on voulait qu'elles comptent, on les ajouterait à woundsLost ou figuresLost.
+                }
             }
         }
 
@@ -126,6 +140,6 @@ public class ResolveMeleeCommandHandler : IRequestHandler<ResolveMeleeCommand, M
 
         await _repository.SaveAsync(match, cancellationToken);
 
-        return new MeleeResultDto(woundsLost, figuresLost, brutalTriggered, loserId, moraleFailed);
+        return new MeleeResultDto(woundsLost, figuresLost, cohesionLostPerUnit, brutalTriggered, loserId, moraleFailed);
     }
 }

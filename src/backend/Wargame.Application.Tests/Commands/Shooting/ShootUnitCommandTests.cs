@@ -88,7 +88,8 @@ public class ShootUnitCommandTests
             new Wargame.Domain.Services.ShootingResolutionService(diceRoller), 
             new Wargame.Domain.Services.ShootingValidationService(new List<Wargame.Domain.Specifications.Shooting.IShootingValidationSpec> { new Wargame.Domain.Specifications.Shooting.EngagementConstraintsSpec(), new Wargame.Domain.Specifications.Shooting.MovementConstraintsSpec(), new Wargame.Domain.Specifications.Shooting.RangeSpec(), new Wargame.Domain.Specifications.Shooting.LineOfSightSpec() }), 
             new Wargame.Domain.Services.DamageResolutionService(diceRoller, new List<Wargame.Domain.Services.Traits.IWeaponTraitStrategy> { new Wargame.Domain.Services.Traits.SuppressionTraitStrategy(), new Wargame.Domain.Services.Traits.IncendiaryTraitStrategy() }), 
-            new Wargame.Domain.Services.MoraleResolutionService(diceRoller));
+            new Wargame.Domain.Services.MoraleResolutionService(diceRoller),
+            new Wargame.Domain.Services.UnitCohesionService());
         Func<Task> act = () => handler.Handle(command, CancellationToken.None);
 
         await act.Should().ThrowAsync<InvalidOperationException>()
@@ -113,7 +114,8 @@ public class ShootUnitCommandTests
             new Wargame.Domain.Services.ShootingResolutionService(diceRoller), 
             new Wargame.Domain.Services.ShootingValidationService(new List<Wargame.Domain.Specifications.Shooting.IShootingValidationSpec> { new Wargame.Domain.Specifications.Shooting.EngagementConstraintsSpec(), new Wargame.Domain.Specifications.Shooting.MovementConstraintsSpec(), new Wargame.Domain.Specifications.Shooting.RangeSpec(), new Wargame.Domain.Specifications.Shooting.LineOfSightSpec() }), 
             new Wargame.Domain.Services.DamageResolutionService(diceRoller, new List<Wargame.Domain.Services.Traits.IWeaponTraitStrategy> { new Wargame.Domain.Services.Traits.SuppressionTraitStrategy(), new Wargame.Domain.Services.Traits.IncendiaryTraitStrategy() }), 
-            new Wargame.Domain.Services.MoraleResolutionService(diceRoller));
+            new Wargame.Domain.Services.MoraleResolutionService(diceRoller),
+            new Wargame.Domain.Services.UnitCohesionService());
         var result = await handler.Handle(command, CancellationToken.None);
 
         result.Should().NotBeNull();
@@ -139,7 +141,8 @@ public class ShootUnitCommandTests
             new Wargame.Domain.Services.ShootingResolutionService(diceRoller), 
             new Wargame.Domain.Services.ShootingValidationService(new List<Wargame.Domain.Specifications.Shooting.IShootingValidationSpec> { new Wargame.Domain.Specifications.Shooting.EngagementConstraintsSpec(), new Wargame.Domain.Specifications.Shooting.MovementConstraintsSpec(), new Wargame.Domain.Specifications.Shooting.RangeSpec(), new Wargame.Domain.Specifications.Shooting.LineOfSightSpec() }), 
             new Wargame.Domain.Services.DamageResolutionService(diceRoller, new List<Wargame.Domain.Services.Traits.IWeaponTraitStrategy> { new Wargame.Domain.Services.Traits.SuppressionTraitStrategy(), new Wargame.Domain.Services.Traits.IncendiaryTraitStrategy() }), 
-            new Wargame.Domain.Services.MoraleResolutionService(diceRoller));
+            new Wargame.Domain.Services.MoraleResolutionService(diceRoller),
+            new Wargame.Domain.Services.UnitCohesionService());
         Func<Task> act = () => handler.Handle(command, CancellationToken.None);
 
         await act.Should().ThrowAsync<InvalidOperationException>()
@@ -166,7 +169,8 @@ public class ShootUnitCommandTests
             new Wargame.Domain.Services.ShootingResolutionService(diceRoller), 
             new Wargame.Domain.Services.ShootingValidationService(new List<Wargame.Domain.Specifications.Shooting.IShootingValidationSpec> { new Wargame.Domain.Specifications.Shooting.EngagementConstraintsSpec(), new Wargame.Domain.Specifications.Shooting.MovementConstraintsSpec(), new Wargame.Domain.Specifications.Shooting.RangeSpec(), new Wargame.Domain.Specifications.Shooting.LineOfSightSpec() }), 
             new Wargame.Domain.Services.DamageResolutionService(diceRoller, new List<Wargame.Domain.Services.Traits.IWeaponTraitStrategy> { new Wargame.Domain.Services.Traits.SuppressionTraitStrategy(), new Wargame.Domain.Services.Traits.IncendiaryTraitStrategy() }), 
-            new Wargame.Domain.Services.MoraleResolutionService(diceRoller));
+            new Wargame.Domain.Services.MoraleResolutionService(diceRoller),
+            new Wargame.Domain.Services.UnitCohesionService());
         var result = await handler.Handle(command, CancellationToken.None);
 
         result.Should().NotBeNull();
@@ -190,7 +194,8 @@ public class ShootUnitCommandTests
             new Wargame.Domain.Services.ShootingResolutionService(diceRoller), 
             new Wargame.Domain.Services.ShootingValidationService(new List<Wargame.Domain.Specifications.Shooting.IShootingValidationSpec> { new Wargame.Domain.Specifications.Shooting.EngagementConstraintsSpec(), new Wargame.Domain.Specifications.Shooting.MovementConstraintsSpec(), new Wargame.Domain.Specifications.Shooting.RangeSpec(), new Wargame.Domain.Specifications.Shooting.LineOfSightSpec() }), 
             new Wargame.Domain.Services.DamageResolutionService(diceRoller, new List<Wargame.Domain.Services.Traits.IWeaponTraitStrategy> { new Wargame.Domain.Services.Traits.SuppressionTraitStrategy(), new Wargame.Domain.Services.Traits.IncendiaryTraitStrategy() }), 
-            new Wargame.Domain.Services.MoraleResolutionService(diceRoller));
+            new Wargame.Domain.Services.MoraleResolutionService(diceRoller),
+            new Wargame.Domain.Services.UnitCohesionService());
         Func<Task> act = () => handler.Handle(command, CancellationToken.None);
 
         await act.Should().ThrowAsync<InvalidOperationException>()
@@ -216,7 +221,8 @@ public class ShootUnitCommandTests
             new Wargame.Domain.Services.ShootingResolutionService(diceRoller), 
             new Wargame.Domain.Services.ShootingValidationService(new List<Wargame.Domain.Specifications.Shooting.IShootingValidationSpec> { new Wargame.Domain.Specifications.Shooting.EngagementConstraintsSpec(), new Wargame.Domain.Specifications.Shooting.MovementConstraintsSpec(), new Wargame.Domain.Specifications.Shooting.RangeSpec(), new Wargame.Domain.Specifications.Shooting.LineOfSightSpec() }), 
             new Wargame.Domain.Services.DamageResolutionService(diceRoller, new List<Wargame.Domain.Services.Traits.IWeaponTraitStrategy> { new Wargame.Domain.Services.Traits.SuppressionTraitStrategy(), new Wargame.Domain.Services.Traits.IncendiaryTraitStrategy() }), 
-            new Wargame.Domain.Services.MoraleResolutionService(diceRoller));
+            new Wargame.Domain.Services.MoraleResolutionService(diceRoller),
+            new Wargame.Domain.Services.UnitCohesionService());
         var result = await handler.Handle(command, CancellationToken.None);
 
         result.Should().NotBeNull();
@@ -240,7 +246,8 @@ public class ShootUnitCommandTests
             new Wargame.Domain.Services.ShootingResolutionService(diceRoller), 
             new Wargame.Domain.Services.ShootingValidationService(new List<Wargame.Domain.Specifications.Shooting.IShootingValidationSpec> { new Wargame.Domain.Specifications.Shooting.EngagementConstraintsSpec(), new Wargame.Domain.Specifications.Shooting.MovementConstraintsSpec(), new Wargame.Domain.Specifications.Shooting.RangeSpec(), new Wargame.Domain.Specifications.Shooting.LineOfSightSpec() }), 
             new Wargame.Domain.Services.DamageResolutionService(diceRoller, new List<Wargame.Domain.Services.Traits.IWeaponTraitStrategy> { new Wargame.Domain.Services.Traits.SuppressionTraitStrategy(), new Wargame.Domain.Services.Traits.IncendiaryTraitStrategy() }), 
-            new Wargame.Domain.Services.MoraleResolutionService(diceRoller));
+            new Wargame.Domain.Services.MoraleResolutionService(diceRoller),
+            new Wargame.Domain.Services.UnitCohesionService());
         Func<Task> act = () => handler.Handle(command, CancellationToken.None);
 
         await act.Should().ThrowAsync<InvalidOperationException>()
@@ -266,7 +273,8 @@ public class ShootUnitCommandTests
             new Wargame.Domain.Services.ShootingResolutionService(diceRoller), 
             new Wargame.Domain.Services.ShootingValidationService(new List<Wargame.Domain.Specifications.Shooting.IShootingValidationSpec> { new Wargame.Domain.Specifications.Shooting.EngagementConstraintsSpec(), new Wargame.Domain.Specifications.Shooting.MovementConstraintsSpec(), new Wargame.Domain.Specifications.Shooting.RangeSpec(), new Wargame.Domain.Specifications.Shooting.LineOfSightSpec() }), 
             new Wargame.Domain.Services.DamageResolutionService(diceRoller, new List<Wargame.Domain.Services.Traits.IWeaponTraitStrategy> { new Wargame.Domain.Services.Traits.SuppressionTraitStrategy(), new Wargame.Domain.Services.Traits.IncendiaryTraitStrategy() }), 
-            new Wargame.Domain.Services.MoraleResolutionService(diceRoller));
+            new Wargame.Domain.Services.MoraleResolutionService(diceRoller),
+            new Wargame.Domain.Services.UnitCohesionService());
         var result = await handler.Handle(command, CancellationToken.None);
 
         result.Should().NotBeNull();
@@ -297,7 +305,8 @@ public class ShootUnitCommandTests
             new Wargame.Domain.Services.ShootingResolutionService(diceRoller), 
             new Wargame.Domain.Services.ShootingValidationService(new List<Wargame.Domain.Specifications.Shooting.IShootingValidationSpec> { new Wargame.Domain.Specifications.Shooting.EngagementConstraintsSpec(), new Wargame.Domain.Specifications.Shooting.MovementConstraintsSpec(), new Wargame.Domain.Specifications.Shooting.RangeSpec(), new Wargame.Domain.Specifications.Shooting.LineOfSightSpec() }), 
             new Wargame.Domain.Services.DamageResolutionService(diceRoller, new List<Wargame.Domain.Services.Traits.IWeaponTraitStrategy> { new Wargame.Domain.Services.Traits.SuppressionTraitStrategy(), new Wargame.Domain.Services.Traits.IncendiaryTraitStrategy() }), 
-            new Wargame.Domain.Services.MoraleResolutionService(diceRoller));
+            new Wargame.Domain.Services.MoraleResolutionService(diceRoller),
+            new Wargame.Domain.Services.UnitCohesionService());
         Func<Task> act = () => handler.Handle(command, CancellationToken.None);
 
         await act.Should().ThrowAsync<InvalidOperationException>()

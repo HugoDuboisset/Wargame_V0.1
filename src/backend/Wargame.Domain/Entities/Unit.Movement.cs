@@ -21,13 +21,9 @@ public partial class Unit
 
     /// <summary>
     /// Valide que la cohésion de l'unité sera respectée après application des nouveaux déplacements.
-    /// Règle : si 1 figurine, pas de contrainte.
-    ///         si ≤ 5 figurines : chaque figurine doit être à ≤ 1" bord à bord d'au moins 1 voisine.
-    ///         si > 5 figurines : chaque figurine doit être à ≤ 2" bord à bord d'au moins 2 voisines.
+    /// Fait appel à UnitCohesionService pour vérifier les règles globales.
     /// </summary>
-    /// <param name="moves">Les nouveaux déplacements demandés. Les figurines non listées gardent leur position actuelle.</param>
-    /// <returns>La liste des messages d'erreur de cohésion. Vide si tout est valide.</returns>
-    public IReadOnlyList<string> ValidateCohesion(IReadOnlyList<FigureMove> moves)
+    public IReadOnlyList<string> ValidateCohesion(IReadOnlyList<FigureMove> moves, Services.UnitCohesionService cohesionService)
     {
         var errors = new List<string>();
         var aliveFigures = _figures.Where(f => f.IsAlive).ToList();
@@ -36,38 +32,12 @@ public partial class Unit
         if (aliveFigures.Count <= 1)
             return errors;
 
-        // Reconstruction du dictionnaire des positions finales (centre du socle)
+        // Reconstruction du dictionnaire des positions finales
         var moveDict = moves.ToDictionary(m => m.FigureId, m => m.NewPosition);
-        var finalPositions = aliveFigures.ToDictionary(
-            f => f.Id,
-            f => moveDict.TryGetValue(f.Id, out var newPos) ? newPos : f.Position
-        );
-
-        bool largeUnit = aliveFigures.Count > 5;
-        double maxDistance = largeUnit ? 2.0 : 1.0;
-        int requiredNeighbors = largeUnit ? 2 : 1;
-
-        foreach (var figure in aliveFigures)
+        
+        if (!cohesionService.IsInCohesion(aliveFigures, moveDict))
         {
-            var figurePos = finalPositions[figure.Id];
-            var neighbors = aliveFigures
-                .Where(other => other.Id != figure.Id)
-                .Select(other =>
-                {
-                    var otherPos = finalPositions[other.Id];
-                    var centreToCentre = figurePos.DistanceTo(otherPos);
-                    var radiusA = (figure.BaseSizeMm / 2.0) / 25.4;
-                    var radiusB = (other.BaseSizeMm / 2.0) / 25.4;
-                    return centreToCentre - radiusA - radiusB;
-                })
-                .Count(dist => dist <= maxDistance);
-
-            if (neighbors < requiredNeighbors)
-            {
-                errors.Add(
-                    $"La figurine {figure.Id} brise la cohésion de l'unité : " +
-                    $"seulement {neighbors} voisine(s) à {maxDistance}\" ou moins, {requiredNeighbors} requise(s).");
-            }
+            errors.Add("La position finale ne respecte pas les règles de cohésion d'unité (Distance 2\" et groupe continu).");
         }
 
         return errors;

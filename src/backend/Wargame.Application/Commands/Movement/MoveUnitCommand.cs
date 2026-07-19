@@ -35,10 +35,12 @@ public class MoveUnitCommandValidator : AbstractValidator<MoveUnitCommand>
 public class MoveUnitCommandHandler : IRequestHandler<MoveUnitCommand>
 {
     private readonly IGameMatchRepository _repository;
+    private readonly Wargame.Domain.Services.UnitCohesionService _cohesionService;
 
-    public MoveUnitCommandHandler(IGameMatchRepository repository)
+    public MoveUnitCommandHandler(IGameMatchRepository repository, Wargame.Domain.Services.UnitCohesionService cohesionService)
     {
         _repository = repository;
+        _cohesionService = cohesionService;
     }
 
     public async Task Handle(MoveUnitCommand request, CancellationToken cancellationToken)
@@ -102,7 +104,7 @@ public class MoveUnitCommandHandler : IRequestHandler<MoveUnitCommand>
         }
 
         // Validation de la cohésion après déplacement (délégué au domaine)
-        var cohesionErrors = unit.ValidateCohesion(figureMoves);
+        var cohesionErrors = unit.ValidateCohesion(figureMoves, _cohesionService);
         if (cohesionErrors.Any())
             throw new InvalidOperationException(
                 $"Le déplacement brise la cohésion de l'unité : {string.Join(" | ", cohesionErrors)}");

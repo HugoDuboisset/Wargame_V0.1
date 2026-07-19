@@ -36,17 +36,20 @@ public class ChargeUnitCommandHandler : IRequestHandler<ChargeUnitCommand, Charg
     private readonly AssaultValidationService _validationService;
     private readonly AssaultMovementService _movementService;
     private readonly IDiceRoller _diceRoller;
+    private readonly UnitCohesionService _cohesionService;
 
     public ChargeUnitCommandHandler(
         IGameMatchRepository repository,
         AssaultValidationService validationService,
         AssaultMovementService movementService,
-        IDiceRoller diceRoller)
+        IDiceRoller diceRoller,
+        UnitCohesionService cohesionService)
     {
         _repository = repository;
         _validationService = validationService;
         _movementService = movementService;
         _diceRoller = diceRoller;
+        _cohesionService = cohesionService;
     }
 
     public async Task<ChargeResultDto> Handle(ChargeUnitCommand request, CancellationToken cancellationToken)
@@ -93,6 +96,12 @@ public class ChargeUnitCommandHandler : IRequestHandler<ChargeUnitCommand, Charg
         // 3. Charge réussie : déplacement figurine par figurine (sans superposition)
         var positions = _movementService.CalculateChargePositions(
             chargingUnit.Figures, targetUnit.Figures, chargeDistance);
+
+        var simulatedDict = positions.ToDictionary(k => k.Figure.Id, v => v.NewPosition);
+        if (!_cohesionService.IsInCohesion(chargingUnit.Figures.Where(f => f.IsAlive).ToList(), simulatedDict))
+        {
+            throw new InvalidOperationException("La charge est impossible car le mouvement briserait la cohésion de l'unité.");
+        }
 
         foreach (var (figure, newPosition) in positions)
             figure.MoveTo(newPosition);

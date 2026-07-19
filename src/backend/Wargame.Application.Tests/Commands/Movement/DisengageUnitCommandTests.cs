@@ -33,7 +33,7 @@ public class DisengageUnitCommandTests
         var actionService = new ActionResolutionService(roller);
         var assaultService = new AssaultResolutionService(roller);
         var withdrawalService = new WithdrawalResolutionService(actionService, assaultService);
-        return new DisengageUnitCommandHandler(_repositoryMock.Object, withdrawalService);
+        return new DisengageUnitCommandHandler(_repositoryMock.Object, withdrawalService, new Wargame.Domain.Services.UnitCohesionService());
     }
 
     private (Wargame.Domain.Entities.GameMatch, DomainUnit, DomainUnit) CreateEngagedUnits()

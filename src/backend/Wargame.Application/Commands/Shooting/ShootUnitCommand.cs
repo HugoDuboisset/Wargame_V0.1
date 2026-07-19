@@ -40,19 +40,22 @@ public class ShootUnitCommandHandler : IRequestHandler<ShootUnitCommand, Shootin
     private readonly ShootingValidationService _shootingValidationService;
     private readonly DamageResolutionService _damageResolutionService;
     private readonly MoraleResolutionService _moraleResolutionService;
+    private readonly UnitCohesionService _cohesionService;
 
     public ShootUnitCommandHandler(
-        IGameMatchRepository repository, 
+        IGameMatchRepository repository,
         ShootingResolutionService shootingResolutionService,
         ShootingValidationService shootingValidationService,
         DamageResolutionService damageResolutionService,
-        MoraleResolutionService moraleResolutionService)
+        MoraleResolutionService moraleResolutionService,
+        UnitCohesionService cohesionService)
     {
         _repository = repository;
         _shootingResolutionService = shootingResolutionService;
         _shootingValidationService = shootingValidationService;
         _damageResolutionService = damageResolutionService;
         _moraleResolutionService = moraleResolutionService;
+        _cohesionService = cohesionService;
     }
 
     public async Task<ShootingResultDto> Handle(ShootUnitCommand request, CancellationToken cancellationToken)
@@ -117,6 +120,7 @@ public class ShootUnitCommandHandler : IRequestHandler<ShootUnitCommand, Shootin
         int totalHits = 0;
         int totalWounds = 0;
         int figuresDestroyed = 0;
+        int totalCohesionFiguresDestroyed = 0;
         var targetResults = new List<TargetShootingResultDto>();
 
         // Résolution des blessures, application des dégâts et tests de moral pour chaque unité cible
@@ -129,14 +133,19 @@ public class ShootUnitCommandHandler : IRequestHandler<ShootUnitCommand, Shootin
             var (wounds, destroyed) = _damageResolutionService.ResolveWoundsAndApplyDamage(
                 hits, shootingUnit, targetUnit, opaqueTerrains);
 
+            // Résolution de la perte de cohésion
+            var (movedFigures, destroyedByCohesion) = _cohesionService.ResolveCohesionLoss(targetUnit);
+            int cohesionDestroyed = destroyedByCohesion.Count;
+
             totalWounds += wounds;
             figuresDestroyed += destroyed;
+            totalCohesionFiguresDestroyed += cohesionDestroyed;
 
             bool moraleTriggered = false;
             bool moralePassed = false;
 
             // Déclencher un test de moral si l'unité a subi des pertes et est descendue à <= 50% de sa force initiale
-            if (destroyed > 0 && targetUnit.HasLostHalfOrMore())
+            if ((destroyed > 0 || cohesionDestroyed > 0) && targetUnit.HasLostHalfOrMore())
             {
                 moraleTriggered = true;
                 moralePassed = _moraleResolutionService.ResolveMoraleTest(targetUnit);
@@ -147,6 +156,7 @@ public class ShootUnitCommandHandler : IRequestHandler<ShootUnitCommand, Shootin
                 Hits: hits.Count,
                 Wounds: wounds,
                 FiguresDestroyed: destroyed,
+                CohesionFiguresDestroyed: cohesionDestroyed,
                 MoraleTestTriggered: moraleTriggered,
                 MoraleTestPassed: moralePassed,
                 TargetPinnedDown: targetUnit.IsPinnedDown()
@@ -161,6 +171,7 @@ public class ShootUnitCommandHandler : IRequestHandler<ShootUnitCommand, Shootin
             TotalHits: totalHits, 
             TotalWounds: totalWounds, 
             FiguresDestroyed: figuresDestroyed, 
+            TotalCohesionFiguresDestroyed: totalCohesionFiguresDestroyed,
             TargetResults: targetResults
         );
     }

@@ -55,7 +55,8 @@ public class ChargeUnitCommandTests
             _repositoryMock.Object,
             new AssaultValidationService(),
             new AssaultMovementService(),
-            diceRoller);
+            diceRoller,
+            new Wargame.Domain.Services.UnitCohesionService());
     }
 
     private static IDiceRoller Roller(params int[] rolls)
