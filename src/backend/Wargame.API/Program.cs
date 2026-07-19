@@ -39,7 +39,7 @@ if (app.Environment.IsDevelopment())
 // Intercepte les erreurs (ValidationException, etc.) et retourne proprement du ProblemDetails
 app.UseExceptionHandler(); 
 
-app.UseHttpsRedirection();
+// app.UseHttpsRedirection();
 
 // Routage vers nos classes Controllers
 app.MapControllers();
