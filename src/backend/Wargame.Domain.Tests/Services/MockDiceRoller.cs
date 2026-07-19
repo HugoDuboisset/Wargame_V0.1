@@ -37,4 +37,14 @@ public class MockDiceRoller : IDiceRoller
         // Valeur par défaut si on demande plus de jets que prévu
         return 1; 
     }
+
+    public int RollD6()
+    {
+        if (_rolls.Count > 0)
+        {
+            return _rolls.Dequeue();
+        }
+        
+        return 1;
+    }
 }

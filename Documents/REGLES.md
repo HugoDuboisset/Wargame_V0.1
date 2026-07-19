@@ -196,6 +196,8 @@ En cas de réussite, l'unité peut faire son mouvement.
 
 En cas d'échec, l'unité (ou les unités) ennemies avec laquelle elle était engagée peut faire une attaque d'opportunité. Le mouvement a lieu, mais l'unité est considérée comme en fuite (il s'agit plus d'une fuite désordonnée que d'un désengagement en bon ordre).
 
+Une attaque d'opportunité est une attaque normale avec un malus de -3 pour toucher. 
+
 Un désengagement ayant lieu lors de la phase de mouvement ne donne pas de statut en fuite. 
 
 ### Phase de tir

@@ -54,7 +54,7 @@ public class DamageResolutionServiceTests
 
         wounds.Should().Be(2);
         destroyed.Should().Be(2); // Cibles 1 PV, 2 blessures = 2 morts
-        targetUnit.GetAliveCount().Should().Be(3); // 5 - 2 = 3
+        targetUnit.GetAliveCount().Should().Be(3); 
     }
 
     [Fact]

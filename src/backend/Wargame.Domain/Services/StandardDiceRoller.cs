@@ -11,4 +11,9 @@ public class StandardDiceRoller : IDiceRoller
     {
         return Random.Shared.Next(1, 11);
     }
+
+    public int RollD6()
+    {
+        return Random.Shared.Next(1, 7);
+    }
 }

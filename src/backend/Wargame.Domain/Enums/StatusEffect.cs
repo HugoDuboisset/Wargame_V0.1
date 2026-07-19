@@ -38,5 +38,17 @@ public enum StatusEffect
     /// Saturée : mouvement réduit de 2" lors de la prochaine activation.
     /// Causé par le trait d'arme Saturation.
     /// </summary>
-    Suppressed = 1 << 4
+    Suppressed = 1 << 4,
+
+    /// <summary>
+    /// En charge : l'unité a déclaré un assaut ce tour. Donne +2 en Initiative lors de la Phase de Mêlée.
+    /// Retiré en fin de phase de mêlée.
+    /// </summary>
+    Charging = 1 << 5,
+
+    /// <summary>
+    /// En déroute : l'unité doit se désengager et se rapprocher du bord de table.
+    /// À l'activation suivante, elle refait un test de moral. Succès = statut retiré.
+    /// </summary>
+    Routing = 1 << 6
 }

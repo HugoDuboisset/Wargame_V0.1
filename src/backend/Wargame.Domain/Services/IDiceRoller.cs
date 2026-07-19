@@ -10,4 +10,9 @@ public interface IDiceRoller
     /// Lance 1D10 et retourne le résultat (de 1 à 10).
     /// </summary>
     int RollD10();
+
+    /// <summary>
+    /// Lance 1D6 et retourne le résultat (de 1 à 6).
+    /// </summary>
+    int RollD6();
 }
